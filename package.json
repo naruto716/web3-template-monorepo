@@ -1,0 +1,14 @@
+{
+  "name": "web3-template",
+  "version": "1.0.0",
+  "description": "Template for Web3 apps with smart contracts, backend and frontend",
+  "scripts": {
+    "contracts:compile": "cd contracts && npx hardhat compile",
+    "contracts:test": "cd contracts && npx hardhat test",
+    "contracts:node": "cd contracts && npx hardhat node",
+    "contracts:deploy:local": "cd contracts && npx hardhat run scripts/deploy.ts --network localhost",
+    "contracts:deploy:sepolia": "cd contracts && npx hardhat run scripts/deploy.ts --network sepolia"
+  },
+  "author": "",
+  "license": "MIT"
+} 
