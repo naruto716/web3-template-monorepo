@@ -2,6 +2,7 @@ import { Navigate, RouteObject } from 'react-router-dom';
 import { RootLayout } from '../layout/RootLayout';
 import { HomePage } from '@/pages/HomePage';
 import { MarketplacePage } from '@/pages/MarketplacePage';
+import { ListItemPage } from '@/pages/ListItemPage';
 
 export const routes: RouteObject[] = [
   {
@@ -15,6 +16,10 @@ export const routes: RouteObject[] = [
       {
         path: 'marketplace',
         element: <MarketplacePage />,
+      },
+      {
+        path: 'list-item',
+        element: <ListItemPage />,
       },
       {
         path: '*',

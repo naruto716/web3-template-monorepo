@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import { exec } from "child_process";
 
 async function main() {
   console.log("Deploying SimpleMarketplace contract...");
@@ -8,7 +9,21 @@ async function main() {
 
   await marketplace.waitForDeployment();
 
-  console.log(`SimpleMarketplace deployed to: ${await marketplace.getAddress()}`);
+  const address = await marketplace.getAddress();
+  console.log(`SimpleMarketplace deployed to: ${address}`);
+  
+  // Copy ABI to frontend with the new contract address
+  exec(`node scripts/copyAbiToFrontend.js ${address}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error copying ABI: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Copy ABI stderr: ${stderr}`);
+      return;
+    }
+    console.log(stdout);
+  });
 }
 
 main()

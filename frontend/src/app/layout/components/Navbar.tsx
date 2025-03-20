@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { WalletButton } from '@/features/auth/components/WalletButton';
 
 export function Navbar() {
   return (
@@ -16,7 +17,7 @@ export function Navbar() {
           <Link to="/marketplace">
             <Button variant="ghost">Marketplace</Button>
           </Link>
-          <Button variant="outline">Connect Wallet</Button>
+          <WalletButton />
         </div>
       </div>
     </nav>

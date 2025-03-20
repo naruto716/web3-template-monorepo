@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "Template for Web3 apps with smart contracts, backend and frontend",
   "scripts": {
-    "contracts:compile": "cd contracts && npx hardhat compile",
+    "contracts:compile": "cd contracts && npm run compile",
     "contracts:test": "cd contracts && npx hardhat test",
     "contracts:node": "cd contracts && npx hardhat node",
     "contracts:deploy:local": "cd contracts && npx hardhat run scripts/deploy.ts --network localhost",
-    "contracts:deploy:sepolia": "cd contracts && npx hardhat run scripts/deploy.ts --network sepolia"
+    "contracts:deploy:sepolia": "cd contracts && npx hardhat run scripts/deploy.ts --network sepolia",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "start": "npm run frontend:dev",
+    "dev": "npm run frontend:dev"
   },
   "author": "",
   "license": "MIT"
