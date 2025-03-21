@@ -24,6 +24,19 @@ async function main() {
     }
     console.log(stdout);
   });
+
+  // Copy ABI to backend with the new contract address
+  exec(`node scripts/copyAbiToBackend.js ${address}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error copying ABI: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`Copy ABI stderr: ${stderr}`);
+      return;
+    }
+    console.log(stdout);
+  });
 }
 
 main()

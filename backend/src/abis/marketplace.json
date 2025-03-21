@@ -233,6 +233,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "itemCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -277,19 +290,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "itemCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "string",
@@ -324,9 +324,14 @@
           "internalType": "uint256",
           "name": "_itemId",
           "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
         }
       ],
-      "name": "removeFromSale",
+      "name": "relistItem",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -337,14 +342,9 @@
           "internalType": "uint256",
           "name": "_itemId",
           "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_price",
-          "type": "uint256"
         }
       ],
-      "name": "relistItem",
+      "name": "removeFromSale",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -376,5 +376,5 @@
       "type": "function"
     }
   ],
-  "address": "0x8cd59846B57dD6b1f31c35c33C90210A871B28d5"
-} 
+  "address": "0xA8656222Bf62F264d96407F6eb0FcE23f870c599"
+}
