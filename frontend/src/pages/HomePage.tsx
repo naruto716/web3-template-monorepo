@@ -34,7 +34,9 @@ export function HomePage() {
               </CardContent>
               <CardFooter className="flex justify-between">
                 <span className="text-sm font-medium">0.1 ETH</span>
-                <Button variant="outline" size="sm">View Details</Button>
+                <Link to={`/item/${item}`}>
+                  <Button variant="outline" size="sm">View Details</Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
