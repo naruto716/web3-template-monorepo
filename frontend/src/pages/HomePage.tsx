@@ -7,7 +7,7 @@ export function HomePage() {
     <div className="space-y-12">
       <section className="py-12 text-center">
         <h1 className="text-4xl font-bold mb-4">
-          Welcome to Web3 Marketplace
+          Welcome to Web3 Marketplace!
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
           Buy and sell digital items on our decentralized marketplace.
