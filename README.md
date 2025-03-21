@@ -2,6 +2,8 @@
 
 A comprehensive template for building Web3 applications with a clear separation of concerns between on-chain and off-chain components.
 
+**For the ease of use, I have not added .env to `.gitignore`, but tbh there's nothing valuable in the accounts, just two new accounts purely for the competition lol**
+
 ## 🏗️ Architecture
 
 This template uses a three-part architecture:

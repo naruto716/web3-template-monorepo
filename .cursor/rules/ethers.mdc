@@ -5,6 +5,6 @@ alwaysApply: true
 ---
 
 # Your rule content
-Use ethers v6 for the frontend
+Use ethers v6 for the frontend and the backend, do not use v6
 - You can @ files here
 - You can use markdown but dont have to
