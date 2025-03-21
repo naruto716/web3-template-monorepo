@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { getProvider } from './provider';
-import marketplaceABI from '../abis/marketplace.json';
+import marketplaceABI from '../abis/simplemarketplace.json';
 import logger from '../utils/logger';
 
 // Define BlockchainItem interface
