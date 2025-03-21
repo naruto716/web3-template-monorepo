@@ -23,7 +23,31 @@ const swaggerDefinition = {
     },
   ],
   components: {
+    securitySchemes: {
+      BearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
     schemas: {
+      User: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          walletAddress: { type: 'string' },
+          roles: { 
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['user', 'professional', 'admin']
+            }
+          },
+          nonce: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
       Item: {
         type: 'object',
         properties: {
