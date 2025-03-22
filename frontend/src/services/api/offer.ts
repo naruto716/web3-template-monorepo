@@ -16,10 +16,18 @@ export interface Offer {
   endDate: string;
   totalWorkHours: number;
   totalPay: string;
-  employerId: string;
-  talentId: string;
+  employerId: {
+    _id: string;
+    walletAddress: string;
+  };
+  talentId: {
+    _id: string;
+    walletAddress: string;
+  };
   status: 'waiting' | 'accepted' | 'paid' | 'working' | 'finished';
   paymentTxHash?: string;
+  workStartedAt?: string;
+  workCompletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,8 +56,10 @@ export const offerApi = {
   },
 
   // Get all offers with pagination
-  getAllOffers: async (page = 1, limit = 10): Promise<OfferListResponse> => {
-    const response = await client.get<{ status: number; data: OfferListResponse }>(`/offers?page=${page}&limit=${limit}`);
+  getAllOffers: async (page = 1, limit = 10, role = 'employer'): Promise<OfferListResponse> => {
+    const response = await client.get<{ status: number; data: OfferListResponse }>(
+      `/offers?page=${page}&limit=${limit}&role=${role}`
+    );
     return response.data.data;
   },
 
