@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { searchTalents, setSearchParams } from '@/features/talent/talentSlice';
 import { Talent, TalentSkill } from '@/services/api/talent';
 import { ethers } from 'ethers';
-import { Search, MapPin, Clock, Award, Wallet } from 'lucide-react';
+import { Award, Clock, MapPin, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export function HomePage() {
   const dispatch = useAppDispatch();
