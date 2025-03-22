@@ -34,12 +34,12 @@ export function WalletButton() {
       ? 'admin' 
       : roles.includes('professional') 
         ? 'professional' 
-        : 'user';
+        : 'employer';
     
     const badgeColors = {
       admin: 'bg-purple-100 text-purple-800',
       professional: 'bg-blue-100 text-blue-800',
-      user: 'bg-green-100 text-green-800'
+      employer: 'bg-green-100 text-green-800'
     };
     
     return (

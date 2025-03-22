@@ -154,7 +154,7 @@ router.get('/profile', authenticateJWT, getProfile);
  *                 type: array
  *                 items:
  *                   type: string
- *                   enum: [user, professional, admin]
+ *                   enum: [employer, professional, admin]
  *     responses:
  *       200:
  *         description: User roles updated

@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export enum UserRole {
-  USER = 'user',
+  EMPLOYER = 'employer',
   PROFESSIONAL = 'professional', 
   ADMIN = 'admin'
 }
@@ -26,7 +26,7 @@ const UserSchema = new Schema<IUser>(
     roles: {
       type: [String],
       enum: Object.values(UserRole),
-      default: [UserRole.USER],
+      default: [UserRole.EMPLOYER],
     },
     nonce: {
       type: String,

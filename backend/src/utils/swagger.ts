@@ -40,7 +40,7 @@ const swaggerDefinition = {
             type: 'array',
             items: {
               type: 'string',
-              enum: ['user', 'professional', 'admin']
+              enum: ['employer', 'professional', 'admin']
             }
           },
           nonce: { type: 'string' },

@@ -23,7 +23,7 @@ export const routes: RouteObject[] = [
       {
         path: 'list-item',
         element: (
-          <ProtectedRoute requiredRoles={['user', 'professional', 'admin']}>
+          <ProtectedRoute requiredRoles={['employer', 'professional', 'admin']}>
             <ListItemPage />
           </ProtectedRoute>
         ),

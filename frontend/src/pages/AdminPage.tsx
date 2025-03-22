@@ -18,7 +18,7 @@ export function AdminPage() {
   const isAdmin = roles.includes('admin');
 
   // All available roles
-  const availableRoles = ['user', 'professional', 'admin'];
+  const availableRoles = ['employer', 'professional', 'admin'];
 
   const handleRoleChange = (role: string, checked: boolean) => {
     if (checked) {

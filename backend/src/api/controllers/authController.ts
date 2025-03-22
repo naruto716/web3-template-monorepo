@@ -24,7 +24,7 @@ export const requestChallenge = async (req: Request, res: Response): Promise<voi
       { 
         walletAddress: normalizedAddress, 
         nonce,
-        $setOnInsert: { roles: [UserRole.USER] }
+        $setOnInsert: { roles: [UserRole.EMPLOYER] }
       },
       { upsert: true, new: true }
     );
