@@ -1,5 +1,7 @@
 import express from 'express';
 import * as talentController from '../controllers/talentController';
+import { authenticateJWT, authorize } from '../../utils/auth';
+import { UserRole } from '../../models/User';
 
 const router = express.Router();
 
@@ -113,6 +115,6 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/search', talentController.searchTalents);
+router.get('/search', authenticateJWT, authorize([UserRole.EMPLOYER]), talentController.searchTalents);
 
 export default router; 
