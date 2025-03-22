@@ -102,17 +102,26 @@ const swaggerDefinition = {
           description: { type: 'string' },
           skills: {
             type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                hourlyRate: { type: 'string' },
+                yearsOfExperience: { type: 'number' },
+                isMatched: { type: 'boolean' }
+              }
+            }
+          },
+          matchedSkills: {
+            type: 'array',
             items: { type: 'string' }
           },
-          hourlyRate: { type: 'string' },
           availability: { type: 'boolean' },
-          rating: { type: 'number' },
           experience: { 
             type: 'string',
             enum: ['entry', 'intermediate', 'expert']
           },
           location: { type: 'string' },
-          completedJobs: { type: 'number' },
           walletAddress: { type: 'string' },
           imageUrl: { type: 'string', nullable: true },
           createdAt: { type: 'string', format: 'date-time' },

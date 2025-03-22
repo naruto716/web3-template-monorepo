@@ -12,10 +12,14 @@ interface SearchFilters {
   availability?: 'available' | 'unavailable' | 'all';
   location?: string;
   experience?: 'entry' | 'intermediate' | 'expert';
+  yearsOfExperience?: {
+    min?: number;
+    max?: number;
+  };
 }
 
 interface SortOptions {
-  sortBy?: 'hourlyRate' | 'rating' | 'experience' | 'createdAt';
+  sortBy?: 'skills.hourlyRate' | 'experience' | 'createdAt' | 'skills.yearsOfExperience';
   sortOrder?: 'asc' | 'desc';
 }
 
@@ -24,8 +28,17 @@ interface PaginationOptions {
   limit: number;
 }
 
+interface ISkillWithMatch extends ISkill {
+  isMatched?: boolean;
+}
+
+interface ITalentWithMatchedSkills extends Omit<ITalent, 'skills'> {
+  skills: ISkillWithMatch[];
+  matchedSkills?: string[];
+}
+
 interface SearchResult {
-  talents: ITalent[];
+  talents: ITalentWithMatchedSkills[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -42,6 +55,7 @@ export const searchTalents = async (
 ): Promise<SearchResult> => {
   try {
     const query: Record<string, any> = {};
+    const searchedSkills = filters.skills || [];
 
     // Text search if query provided
     if (filters.query) {
@@ -49,18 +63,33 @@ export const searchTalents = async (
     }
 
     // Skills filter
-    if (filters.skills?.length) {
-      query.skills = { $all: filters.skills };
+    if (searchedSkills.length) {
+      query['skills.name'] = { 
+        $in: searchedSkills.map(skill => 
+          new RegExp(skill, 'i')
+        ) 
+      };
     }
 
     // Price range filter
     if (filters.priceRange?.min || filters.priceRange?.max) {
-      query.hourlyRate = {};
+      query['skills.hourlyRate'] = {};
       if (filters.priceRange.min) {
-        query.hourlyRate.$gte = ethers.parseEther(filters.priceRange.min.toString()).toString();
+        query['skills.hourlyRate'].$gte = ethers.parseEther(filters.priceRange.min.toString()).toString();
       }
       if (filters.priceRange.max) {
-        query.hourlyRate.$lte = ethers.parseEther(filters.priceRange.max.toString()).toString();
+        query['skills.hourlyRate'].$lte = ethers.parseEther(filters.priceRange.max.toString()).toString();
+      }
+    }
+
+    // Years of experience filter
+    if (filters.yearsOfExperience?.min || filters.yearsOfExperience?.max) {
+      query['skills.yearsOfExperience'] = {};
+      if (filters.yearsOfExperience.min) {
+        query['skills.yearsOfExperience'].$gte = filters.yearsOfExperience.min;
+      }
+      if (filters.yearsOfExperience.max) {
+        query['skills.yearsOfExperience'].$lte = filters.yearsOfExperience.max;
       }
     }
 
@@ -99,11 +128,38 @@ export const searchTalents = async (
       Talent.countDocuments(query)
     ]);
 
+    // Process talents to mark matched skills
+    const processedTalents = talents.map(talent => {
+      const talentObj = talent.toObject();
+      const matchedSkills: string[] = [];
+      
+      const processedSkills = talentObj.skills.map(skill => {
+        const isMatched = searchedSkills.some(searchSkill => 
+          skill.name.toLowerCase().includes(searchSkill.toLowerCase())
+        );
+        
+        if (isMatched) {
+          matchedSkills.push(skill.name);
+        }
+        
+        return {
+          ...skill,
+          isMatched
+        };
+      });
+
+      return {
+        ...talentObj,
+        skills: processedSkills,
+        matchedSkills
+      };
+    });
+
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalItems / pagination.limit);
 
     return {
-      talents,
+      talents: processedTalents,
       pagination: {
         currentPage: pagination.page,
         totalPages,

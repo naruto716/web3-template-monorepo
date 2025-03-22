@@ -1,21 +1,42 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+// Interface for Skill
+interface ISkill {
+  name: string;
+  hourlyRate: string;
+  yearsOfExperience: number;
+}
+
 // Interface for Talent document
 export interface ITalent extends Document {
   name: string;
   description: string;
-  skills: string[];
-  hourlyRate: string;
+  skills: ISkill[];
   availability: boolean;
-  rating: number;
   experience: 'entry' | 'intermediate' | 'expert';
   location: string;
-  completedJobs: number;
   walletAddress: string;
   imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Define Skill schema
+const skillSchema = new Schema<ISkill>({
+  name: {
+    type: String,
+    required: true
+  },
+  hourlyRate: {
+    type: String,
+    required: true
+  },
+  yearsOfExperience: {
+    type: Number,
+    required: true,
+    min: 0
+  }
+});
 
 // Define Talent schema
 const talentSchema = new Schema<ITalent>({
@@ -28,23 +49,10 @@ const talentSchema = new Schema<ITalent>({
     type: String,
     required: true
   },
-  skills: [{
-    type: String,
-    index: true
-  }],
-  hourlyRate: {
-    type: String,
-    required: true
-  },
+  skills: [skillSchema],
   availability: {
     type: Boolean,
     default: true
-  },
-  rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
   },
   experience: {
     type: String,
@@ -54,10 +62,6 @@ const talentSchema = new Schema<ITalent>({
   location: {
     type: String,
     required: true
-  },
-  completedJobs: {
-    type: Number,
-    default: 0
   },
   walletAddress: {
     type: String,
@@ -78,6 +82,13 @@ const talentSchema = new Schema<ITalent>({
 });
 
 // Add text index for search
-talentSchema.index({ name: 'text', description: 'text', skills: 'text' });
+talentSchema.index({ 
+  name: 'text', 
+  description: 'text',
+  'skills.name': 'text'
+});
+
+// Add index for skills.name for better query performance
+talentSchema.index({ 'skills.name': 1 });
 
 export const Talent = mongoose.model<ITalent>('Talent', talentSchema); 

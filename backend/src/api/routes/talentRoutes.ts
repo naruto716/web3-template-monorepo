@@ -82,6 +82,17 @@ const router = express.Router();
  *           maximum: 100
  *           default: 10
  *         description: Items per page
+ *       - in: query
+ *         name: yearsOfExperience.min
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *         description: Minimum years of experience for skills
+ *       - in: query
+ *         name: yearsOfExperience.max
+ *         schema:
+ *           type: number
+ *         description: Maximum years of experience for skills
  *     responses:
  *       200:
  *         description: Successful search results

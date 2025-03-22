@@ -45,8 +45,20 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  logger.error('Unhandled error:', {
+    error: err instanceof Error ? err.message : err,
+    stack: err instanceof Error ? err.stack : undefined,
+    path: req.path,
+    method: req.method,
+    query: req.query,
+    body: req.body
+  });
+  
+  res.status(500).json({ 
+    status: 500,
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 // Start server
