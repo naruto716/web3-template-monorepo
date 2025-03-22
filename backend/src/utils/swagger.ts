@@ -94,6 +94,59 @@ const swaggerDefinition = {
           error: { type: 'string' },
         },
       },
+      Talent: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          skills: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          hourlyRate: { type: 'string' },
+          availability: { type: 'boolean' },
+          rating: { type: 'number' },
+          experience: { 
+            type: 'string',
+            enum: ['entry', 'intermediate', 'expert']
+          },
+          location: { type: 'string' },
+          completedJobs: { type: 'number' },
+          walletAddress: { type: 'string' },
+          imageUrl: { type: 'string', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        }
+      },
+      TalentSearchResponse: {
+        type: 'object',
+        properties: {
+          status: { type: 'integer' },
+          data: {
+            type: 'object',
+            properties: {
+              talents: {
+                type: 'array',
+                items: { 
+                  $ref: '#/components/schemas/Talent'
+                }
+              },
+              pagination: {
+                type: 'object',
+                properties: {
+                  currentPage: { type: 'integer' },
+                  totalPages: { type: 'integer' },
+                  totalItems: { type: 'integer' },
+                  hasNext: { type: 'boolean' },
+                  hasPrev: { type: 'boolean' }
+                }
+              }
+            }
+          },
+          error: { type: 'string', nullable: true }
+        }
+      }
     },
   },
 };
