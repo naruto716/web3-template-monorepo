@@ -24,7 +24,8 @@ const talents = [
     availability: true,
     experience: "expert",
     location: "New York",
-    walletAddress: "0x1234567890123456789012345678901234567890"
+    walletAddress: "0x1234567890123456789012345678901234567890",
+    imageUrl: "https://img.freepik.com/free-psd/3d-illustration-human-avatar-profile_23-2150671142.jpg?semt=ais_hybrid"
   },
   {
     name: "Jane Smith",
@@ -44,7 +45,8 @@ const talents = [
     availability: true,
     experience: "intermediate",
     location: "London",
-    walletAddress: "0x2345678901234567890123456789012345678901"
+    walletAddress: "0x2345678901234567890123456789012345678901",
+    imageUrl: "https://img.freepik.com/free-psd/3d-rendering-hair-style-avatar-design_23-2151869153.jpg?semt=ais_hybrid"
   },
   {
     name: "Bob Wilson",
@@ -64,7 +66,8 @@ const talents = [
     availability: false,
     experience: "expert",
     location: "Berlin",
-    walletAddress: "0x3456789012345678901234567890123456789012"
+    walletAddress: "0x3456789012345678901234567890123456789012",
+    imageUrl: "https://img.freepik.com/free-vector/gradient-avatar-illustration_52683-142426.jpg?semt=ais_hybrid"
   }
 ];
 
