@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { searchTalents, setSearchParams } from '@/features/talent/talentSlice';
 import { Talent, TalentSkill } from '@/services/api/talent';
 import { ethers } from 'ethers';
-import { Search, MapPin, Clock, Award, Wallet } from 'lucide-react';
+import { Award, Clock, MapPin, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export function HomePage() {
   const dispatch = useAppDispatch();
@@ -17,7 +17,7 @@ export function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 16;
+  const itemsPerPage = 6;
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Handle clicks outside of search component
@@ -199,16 +199,19 @@ export function HomePage() {
 
   return (
     <div className="space-y-12">
-      <section className="pt-32 pb-20 px-20 text-center">
-        <h1 className="text-4xl font-bold mb-4">
+      {/* Hero Section */}
+      <section className="pt-32 pb-12 px-4 md:px-20 text-center">
+        <h1 className="text-4xl font-bold mb-2">
           Welcome to Web3 Labor Marketplace!
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-2">
           Connect with skilled professionals and hire talent on our decentralized platform.
         </p>
-        
-        {/* Search Component */}
-        <div className="max-w-2xl mx-auto relative mb-8" ref={searchRef}>
+      </section>
+      
+      {/* Sticky Search Bar - this will stick to top when scrolled to */}
+      <div id="search-container" className="sticky top-0 z-50 -mt-8 pb-3 pt-1 bg-background/80 backdrop-blur-md" ref={searchRef}>
+        <div className="max-w-2xl mx-auto px-4">
           <div className="relative">
             <div className="relative flex items-center w-full rounded-full border shadow-lg px-4 py-3 bg-white dark:bg-gray-900">
               <Search className="h-5 w-5 shrink-0 text-gray-400 mr-3" />
@@ -271,9 +274,36 @@ export function HomePage() {
             </Button>
           </div>
         </div>
-      </section>
+        
+        {/* This div creates a background effect when scrolled */}
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md shadow-sm -z-10 opacity-0 transition-opacity duration-200" 
+             id="sticky-bg" />
+      </div>
 
-      <section>
+      {/* Add script to handle sticky background appearance */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          document.addEventListener('DOMContentLoaded', function() {
+            const searchContainer = document.getElementById('search-container');
+            const stickyBg = document.getElementById('sticky-bg');
+            
+            if (searchContainer && stickyBg) {
+              const searchOffset = searchContainer.offsetTop;
+              
+              window.addEventListener('scroll', function() {
+                if (window.scrollY > searchOffset - 10) {
+                  stickyBg.style.opacity = '1';
+                } else {
+                  stickyBg.style.opacity = '0';
+                }
+              });
+            }
+          });
+        `
+      }} />
+
+      {/* Professionals section with increased margin top */}
+      <section className="mt-16">
         <h2 className="text-2xl font-bold mb-6 text-center">
           Professionals
         </h2>
