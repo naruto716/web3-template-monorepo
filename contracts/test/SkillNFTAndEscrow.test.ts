@@ -78,7 +78,7 @@ describe("SkillNFT_And_Escrow", () => {
 
     await expect(
       contract.connect(company).releasePayment(1)
-    ).to.be.revertedWith("Too early to release");
+    ).to.be.revertedWith("Too early to release payment");
 
     console.log("✅ Properly prevented early release");
   });
