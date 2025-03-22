@@ -13,6 +13,7 @@ contract SkillContract is ERC721URIStorage, Ownable {
         uint256 endDate;
         uint256 payment;
         bool active;
+        uint256 lastPaidTime;
     }
 
     uint256 public agreementCount;
@@ -21,18 +22,19 @@ contract SkillContract is ERC721URIStorage, Ownable {
 
     event AgreementCreated(uint256 agreementId, address freelancer, address company, string skill, uint256 payment);
     event PaymentReleased(address freelancer, uint256 amount);
+    event NFTMinted(address receiver, uint256 tokenId, string tokenURI);
 
-    // ✅ FIX: Remove `msg.sender` from `Ownable()`
     constructor() ERC721("EmploymentNFT", "EMP") Ownable(msg.sender) {}
 
     function createAgreement(
         address _freelancer,
         string memory _skill,
         uint256 _startDate,
-        uint256 _endDate
+        uint256 _endDate,
+        string memory _tokenURI
     ) external payable {
         require(msg.value > 0, "Payment required");
-        require(_endDate > _startDate, "Invalid date range");
+        require(_endDate > _startDate, "Invalid dates");
 
         agreementCount++;
         agreements[agreementCount] = Agreement({
@@ -42,31 +44,38 @@ contract SkillContract is ERC721URIStorage, Ownable {
             startDate: _startDate,
             endDate: _endDate,
             payment: msg.value,
-            active: true
+            active: true,
+            lastPaidTime: block.timestamp
         });
 
-        freelancerBalance[_freelancer] += msg.value;
+        // Mint NFT to company as proof
+        _mint(msg.sender, agreementCount);
+        _setTokenURI(agreementCount, _tokenURI);
+        emit NFTMinted(msg.sender, agreementCount, _tokenURI);
 
         emit AgreementCreated(agreementCount, _freelancer, msg.sender, _skill, msg.value);
     }
 
-    function getAgreement(uint256 _agreementId) public view returns (Agreement memory) {
-        return agreements[_agreementId];
-    }
+    function releasePayment(uint256 _agreementId) external {
+        Agreement storage ag = agreements[_agreementId];
+        require(ag.active, "Not active");
+        require(block.timestamp >= ag.lastPaidTime + 30 days, "Too early to release");
 
-    function mintNFT(address _to, string memory _tokenURI) public onlyOwner {
-        uint256 newItemId = agreementCount;
-        _mint(_to, newItemId);
-        _setTokenURI(newItemId, _tokenURI);
-    }
+        uint256 duration = ag.endDate - ag.startDate;
+        uint256 monthlyPay = ag.payment * 30 days / duration;
 
-    function withdrawPayments() external {
-        uint256 amount = freelancerBalance[msg.sender];
-        require(amount > 0, "No funds available");
+        require(monthlyPay <= ag.payment, "Invalid release");
 
-        freelancerBalance[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
+        ag.payment -= monthlyPay;
+        ag.lastPaidTime = block.timestamp;
 
-        emit PaymentReleased(msg.sender, amount);
+        payable(ag.freelancer).transfer(monthlyPay);
+
+        emit PaymentReleased(ag.freelancer, monthlyPay);
+
+        // Auto-complete agreement if fully paid
+        if (ag.payment == 0) {
+            ag.active = false;
+        }
     }
 }
