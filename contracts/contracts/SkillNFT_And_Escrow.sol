@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SkillContract is ERC721URIStorage, Ownable {
+contract SkillNFT_And_Escrow is ERC721URIStorage, Ownable {
     struct Agreement {
         address company;
         address freelancer;
@@ -26,6 +26,13 @@ contract SkillContract is ERC721URIStorage, Ownable {
 
     constructor() ERC721("EmploymentNFT", "EMP") Ownable(msg.sender) {}
 
+    /// @notice Modifier to ensure only the hiring company can release payment
+    modifier onlyCompany(uint256 _id) {
+        require(msg.sender == agreements[_id].company, "Not the company for this agreement");
+        _;
+    }
+
+    /// @notice Create an agreement and mint a skill NFT
     function createAgreement(
         address _freelancer,
         string memory _skill,
@@ -48,34 +55,38 @@ contract SkillContract is ERC721URIStorage, Ownable {
             lastPaidTime: block.timestamp
         });
 
-        // Mint NFT to company as proof
+        // Mint NFT to company as proof of hiring
         _mint(msg.sender, agreementCount);
         _setTokenURI(agreementCount, _tokenURI);
-        emit NFTMinted(msg.sender, agreementCount, _tokenURI);
 
+        emit NFTMinted(msg.sender, agreementCount, _tokenURI);
         emit AgreementCreated(agreementCount, _freelancer, msg.sender, _skill, msg.value);
     }
 
-    function releasePayment(uint256 _agreementId) external {
+    /// @notice Release part of the escrowed funds to the freelancer
+    function releasePayment(uint256 _agreementId) external onlyCompany(_agreementId) {
         Agreement storage ag = agreements[_agreementId];
-        require(ag.active, "Not active");
-        require(block.timestamp >= ag.lastPaidTime + 30 days, "Too early to release");
+        require(ag.active, "Agreement is not active");
+        require(block.timestamp >= ag.lastPaidTime + 30 days, "Too early to release payment");
 
         uint256 duration = ag.endDate - ag.startDate;
         uint256 monthlyPay = ag.payment * 30 days / duration;
 
-        require(monthlyPay <= ag.payment, "Invalid release");
+        require(monthlyPay <= ag.payment, "Payment exceeds remaining balance");
 
         ag.payment -= monthlyPay;
         ag.lastPaidTime = block.timestamp;
 
         payable(ag.freelancer).transfer(monthlyPay);
-
         emit PaymentReleased(ag.freelancer, monthlyPay);
 
-        // Auto-complete agreement if fully paid
         if (ag.payment == 0) {
             ag.active = false;
         }
+    }
+
+    /// @notice View full agreement details
+    function getAgreement(uint256 _agreementId) external view returns (Agreement memory) {
+        return agreements[_agreementId];
     }
 }
