@@ -12,6 +12,8 @@ const router = express.Router();
  *     summary: Search for talents
  *     description: Search and filter talents based on various criteria
  *     tags: [Talents]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: skills
