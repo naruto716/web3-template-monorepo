@@ -5,7 +5,9 @@ import { MarketplacePage } from '@/pages/MarketplacePage';
 import { ListItemPage } from '@/pages/ListItemPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { AdminPage } from '@/pages/AdminPage';
+import { ItemDetailsPage } from '@/pages/ItemDetailsPage';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
+import { createBrowserRouter } from 'react-router-dom';
 
 export const routes: RouteObject[] = [
   {
@@ -41,9 +43,32 @@ export const routes: RouteObject[] = [
         ),
       },
       {
+        path: 'professional/:id',
+        element: <ItemDetailsPage />,
+      },
+      {
         path: '*',
         element: <Navigate to="/" replace />,
       },
     ],
   },
-]; 
+];
+
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <HomePage />,
+  },
+  {
+    path: '/marketplace',
+    element: <MarketplacePage />,
+  },
+  {
+    path: '/list-item',
+    element: <ListItemPage />,
+  },
+  {
+    path: '/professional/:id',
+    element: <ItemDetailsPage />,
+  },
+]); 
