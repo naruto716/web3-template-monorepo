@@ -1,5 +1,7 @@
 import express from 'express';
 import * as transactionController from '../controllers/transactionController';
+import { authenticateJWT, authorize } from '../../utils/auth';
+import { UserRole } from '../../models/User';
 
 const router = express.Router();
 
@@ -93,6 +95,8 @@ router.get('/:hash', transactionController.getTransaction);
  *     summary: Record a new transaction
  *     description: Record a new blockchain transaction in the database
  *     tags: [Transactions]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -127,6 +131,12 @@ router.get('/:hash', transactionController.getTransaction);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Transaction'
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       409:
  *         description: Transaction already exists
  *         content:
@@ -145,7 +155,7 @@ router.get('/:hash', transactionController.getTransaction);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/', transactionController.recordTransaction);
+router.post('/', authenticateJWT, transactionController.recordTransaction);
 
 /**
  * @swagger
@@ -154,6 +164,8 @@ router.post('/', transactionController.recordTransaction);
  *     summary: Start event listener
  *     description: Start listening for marketplace contract events and record them automatically
  *     tags: [Blockchain]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: Event listener started
@@ -164,6 +176,18 @@ router.post('/', transactionController.recordTransaction);
  *               properties:
  *                 message:
  *                   type: string
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - Insufficient permissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Server error
  *         content:
@@ -171,6 +195,6 @@ router.post('/', transactionController.recordTransaction);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/listen', transactionController.listenForEvents);
+router.post('/listen', authenticateJWT, authorize([UserRole.ADMIN]), transactionController.listenForEvents);
 
 export default router; 
