@@ -1,4 +1,6 @@
 import { ethers } from "hardhat";
+import { SkillNFT_And_Escrow, Talents } from "../typechain-types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 async function main() {
   console.log("Starting Sepolia network tests...");
@@ -8,17 +10,14 @@ async function main() {
   const SKILLNFT_ADDRESS = "0xc8Ac71f2B3c3D8cc31004694ced6D960C860f7f3";
 
   // Get the signer
-  const [signer] = await ethers.getSigners();
+  const [signer]: HardhatEthersSigner[] = await ethers.getSigners();
   console.log("Testing with account:", signer.address);
 
-  // Get contract instances
-  const Talents = await ethers.getContractFactory("Talents");
-  const talents = Talents.attach(TALENTS_ADDRESS);
-
-  const SkillNFT = await ethers.getContractFactory("SkillNFT_And_Escrow");
-  const skillNFT = SkillNFT.attach(SKILLNFT_ADDRESS);
-
   try {
+    // Get contract instances with proper typing
+    const talents: Talents = await ethers.getContractAt("Talents", TALENTS_ADDRESS);
+    const skillNFT: SkillNFT_And_Escrow = await ethers.getContractAt("SkillNFT_And_Escrow", SKILLNFT_ADDRESS);
+
     // Test Talents Contract
     console.log("\nTesting Talents Contract...");
     
@@ -30,11 +29,11 @@ async function main() {
 
     // Get freelancer info
     console.log("Getting freelancer info...");
-    const [name, wallet, profileId] = await talents.getFreelancer(signer.address);
+    const freelancerInfo = await talents.getFreelancer(signer.address);
     console.log("✅ Freelancer info retrieved:");
-    console.log("   Name:", name);
-    console.log("   Wallet:", wallet);
-    console.log("   Profile ID:", profileId);
+    console.log("   Name:", freelancerInfo[0]);
+    console.log("   Wallet:", freelancerInfo[1]);
+    console.log("   Profile ID:", freelancerInfo[2]);
 
     // Test SkillNFT Contract
     console.log("\nTesting SkillNFT Contract...");
@@ -52,12 +51,26 @@ async function main() {
       startDate,
       endDate
     );
-    await createOfferTx.wait();
+    const offerReceipt = await createOfferTx.wait();
     console.log("✅ Offer created");
 
     // Get the token ID from the event
-    const offerCreatedEvent = await skillNFT.queryFilter("OfferNFTCreated");
-    const tokenId = offerCreatedEvent[0].args.tokenId;
+    if (!offerReceipt) throw new Error("Transaction receipt not found");
+    
+    const offerEvent = offerReceipt.logs.find(
+      log => log.topics[0] === skillNFT.interface.getEventTopic("OfferNFTCreated")
+    );
+    
+    if (!offerEvent) throw new Error("OfferNFTCreated event not found");
+    
+    const parsedEvent = skillNFT.interface.parseLog({
+      topics: offerEvent.topics,
+      data: offerEvent.data
+    });
+    
+    if (!parsedEvent) throw new Error("Could not parse event");
+    
+    const tokenId = parsedEvent.args[0];
     console.log("Token ID:", tokenId.toString());
 
     // Get offer details
@@ -76,6 +89,7 @@ async function main() {
     console.log("\n✅ All tests completed successfully!");
   } catch (error) {
     console.error("❌ Test failed:", error);
+    throw error; // Re-throw to trigger process.exit(1)
   }
 }
 
@@ -84,4 +98,4 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  }); 
+  });
