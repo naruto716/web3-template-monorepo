@@ -1,6 +1,9 @@
 import express from 'express';
 import itemRoutes from './itemRoutes';
 import transactionRoutes from './transactionRoutes';
+import talentRoutes from './talentRoutes';
+import authRoutes from './authRoutes';
+
 
 /**
  * @swagger
@@ -11,6 +14,10 @@ import transactionRoutes from './transactionRoutes';
  *     description: Transaction management
  *   - name: Blockchain
  *     description: Direct blockchain operations
+ *   - name: Talents
+ *     description: Talent search and management
+ *   - name: Authentication
+ *     description: Wallet-based authentication
  */
 
 const router = express.Router();
@@ -18,6 +25,8 @@ const router = express.Router();
 // Register routes
 router.use('/items', itemRoutes);
 router.use('/transactions', transactionRoutes);
+router.use('/talents', talentRoutes);
+router.use('/auth', authRoutes);
 
 /**
  * @swagger
