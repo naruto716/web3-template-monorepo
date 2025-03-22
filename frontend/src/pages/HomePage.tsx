@@ -205,7 +205,7 @@ export function HomePage() {
       {/* Hero Section */}
       <section className="pt-32 pb-12 px-4 md:px-20 text-center">
         <h1 className="text-4xl font-bold mb-2">
-          Welcome to Web3 Labor Marketplace!
+          Welcome to Web3 the SuperGig Marketplace
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-2">
           Connect with skilled professionals and hire talent on our decentralized platform.

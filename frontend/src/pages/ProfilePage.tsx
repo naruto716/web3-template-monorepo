@@ -3,17 +3,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { authApi, UserProfile } from '@/services/api/auth';
+import { ContractTimeline } from '@/features/contracts/components/ContractTimeline';
+import { contractsApi } from '@/services/api/contracts';
+import { Offer } from '@/services/api/offer';
 
 export function ProfilePage() {
   const { isAuthenticated, address, roles, requireAuth, LoginDialog } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [contracts, setContracts] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [contractsLoading, setContractsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is authenticated
     if (isAuthenticated) {
       fetchProfile();
+      fetchUserContracts();
     }
   }, [isAuthenticated]);
 
@@ -34,10 +40,26 @@ export function ProfilePage() {
     }
   };
 
+  const fetchUserContracts = async () => {
+    if (!isAuthenticated) return;
+    
+    setContractsLoading(true);
+    
+    try {
+      const response = await contractsApi.getUserContracts();
+      setContracts(response.offers);
+    } catch (err) {
+      console.error('Error fetching contracts:', err);
+    } finally {
+      setContractsLoading(false);
+    }
+  };
+
   const handleViewProfile = () => {
     const isAuthed = requireAuth();
     if (isAuthed) {
       fetchProfile();
+      fetchUserContracts();
     }
   };
 
@@ -125,6 +147,13 @@ export function ProfilePage() {
               )}
             </CardContent>
           </Card>
+          
+          {/* Contract Timeline */}
+          <ContractTimeline 
+            contracts={contracts} 
+            loading={contractsLoading}
+            title={roles?.includes('professional') ? "My Freelance Contracts" : "My Projects"}
+          />
         </div>
       )}
       
