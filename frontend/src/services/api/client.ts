@@ -11,7 +11,11 @@ const client = axios.create({
 // Add request interceptor
 client.interceptors.request.use(
   (config) => {
-    // You can add auth tokens here
+    // Add auth token if available
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -25,7 +29,11 @@ client.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle common errors here
+    // Handle auth errors
+    if (error.response && error.response.status === 401) {
+      // Clear token and user data on unauthorized
+      localStorage.removeItem('auth_token');
+    }
     return Promise.reject(error);
   }
 );

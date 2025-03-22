@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -66,18 +66,20 @@ export function HomePage() {
             <CommandInput 
               placeholder="Search by skill (e.g., Solidity, React, Smart Contracts...)" 
             />
-            <CommandEmpty>No skills found.</CommandEmpty>
-            <CommandGroup>
-              {availableSkills.map((skill) => (
-                <CommandItem
-                  key={skill}
-                  onSelect={() => setSelectedSkill(skill)}
-                  className="cursor-pointer"
-                >
-                  {skill}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            <CommandList>
+              <CommandEmpty>No skills found.</CommandEmpty>
+              <CommandGroup>
+                {availableSkills.map((skill) => (
+                  <CommandItem
+                    key={skill}
+                    onSelect={() => setSelectedSkill(skill)}
+                    value={skill}
+                  >
+                    {skill}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
           </Command>
         </div>
       </section>
