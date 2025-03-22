@@ -11,7 +11,10 @@ import { useEffect, useState } from "react";
 import { talentApi, Talent } from "@/services/api/talent";
 import { formatAddress } from "@/lib/utils";
 import { ethers } from "ethers";
-import { Clock, MapPin, Wallet, Award, GraduationCap, Briefcase, Calendar } from "lucide-react";
+import { Clock, MapPin, Wallet, Award, GraduationCap, Briefcase, Calendar, AlertCircle } from "lucide-react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { offerApi, OfferCreateRequest } from "@/services/api/offer";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Mock data to supplement API data - will be replaced with blockchain data later
 const mockEducation = {
@@ -50,6 +53,7 @@ interface ContractFormData {
 
 export function ItemDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const { isAuthenticated, roles, requireAuth, LoginDialog } = useAuth();
   const [professional, setProfessional] = useState<Talent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +70,12 @@ export function ItemDetailsPage() {
     skillName: '',
     hourlyRate: ''
   });
+  const [submittingContract, setSubmittingContract] = useState(false);
+  const [contractSuccess, setContractSuccess] = useState<string | null>(null);
+  const [contractError, setContractError] = useState<string | null>(null);
+
+  // Check if user is an employer
+  const isEmployer = roles.includes('employer');
 
   useEffect(() => {
     async function fetchProfessionalDetails() {
@@ -142,12 +152,24 @@ export function ItemDetailsPage() {
 
   // Handle opening the contract modal for a specific skill
   const handleHireForSkill = (skill: Talent['skills'][0]) => {
+    // Check if user is authenticated and has employer role
+    const isAuthed = requireAuth();
+    if (!isAuthed || !isEmployer) return;
+    
     setSelectedSkill(skill);
     const hourlyRateEth = getRateValue(skill.hourlyRate);
     
+    // Reset contract form and statuses
+    setContractSuccess(null);
+    setContractError(null);
+    
+    // Calculate tomorrow's date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
     setContractForm({
       jobDescription: '',
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: tomorrow.toISOString().split('T')[0],
       endDate: '',
       totalWorkHours: 40,
       totalPay: (parseFloat(hourlyRateEth) * 40).toString(),
@@ -181,8 +203,24 @@ export function ItemDetailsPage() {
   // Handle contract submission
   const handleSubmitContract = async () => {
     try {
+      setSubmittingContract(true);
+      setContractSuccess(null);
+      setContractError(null);
+      
+      // Validate required fields
+      if (
+        !contractForm.jobDescription || 
+        !contractForm.startDate || 
+        !contractForm.endDate || 
+        !contractForm.totalWorkHours
+      ) {
+        setContractError("All fields are required");
+        setSubmittingContract(false);
+        return;
+      }
+      
       // Format the contract data for the API
-      const contractData = {
+      const contractData: OfferCreateRequest = {
         jobDescription: contractForm.jobDescription,
         startDate: new Date(contractForm.startDate).toISOString(),
         endDate: new Date(contractForm.endDate).toISOString(),
@@ -191,20 +229,22 @@ export function ItemDetailsPage() {
         talentId: contractForm.talentId
       };
       
-      console.log('Contract data to submit:', contractData);
+      // Call the API to create the contract/offer
+      const result = await offerApi.createOffer(contractData);
       
-      // Here you would call your API to create the contract
-      // await contractApi.createContract(contractData);
+      // Show success message
+      setContractSuccess(`Contract #${result._id} created successfully!`);
       
-      // Close the modal
-      setContractModalOpen(false);
-      
-      // Show success message or redirect
-      alert('Contract created successfully!');
+      // Keep the modal open to show success message
+      setTimeout(() => {
+        setContractModalOpen(false);
+      }, 2000);
       
     } catch (err) {
       console.error('Error creating contract:', err);
-      alert('Error creating contract. Please try again.');
+      setContractError(err instanceof Error ? err.message : 'Error creating contract. Please try again.');
+    } finally {
+      setSubmittingContract(false);
     }
   };
 
@@ -292,13 +332,15 @@ export function ItemDetailsPage() {
                         {formatRate(skill.hourlyRate)}
                       </span>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleHireForSkill(skill)}
-                      disabled={!professional.availability}
-                    >
-                      Hire Now
-                    </Button>
+                    {isAuthenticated && isEmployer && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleHireForSkill(skill)}
+                        disabled={!professional.availability}
+                      >
+                        Hire Now
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -357,6 +399,9 @@ export function ItemDetailsPage() {
         </CardFooter>
       </Card>
 
+      {/* Login Dialog for authentication */}
+      {LoginDialog}
+
       {/* Contract Dialog */}
       <Dialog open={contractModalOpen} onOpenChange={setContractModalOpen}>
         <DialogContent className="sm:max-w-[625px]">
@@ -366,6 +411,34 @@ export function ItemDetailsPage() {
               Complete the form below to create a contract with {professional.name} for {selectedSkill?.name} services at {formatRate(selectedSkill?.hourlyRate || '0')}
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Success message */}
+          {contractSuccess && (
+            <Alert className="mb-4 bg-green-50 border-green-200">
+              <div className="flex items-center">
+                <div className="bg-green-400 p-1 rounded-full">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+                  </svg>
+                </div>
+                <AlertTitle className="ml-2 text-green-800">Success</AlertTitle>
+              </div>
+              <AlertDescription className="text-green-700">
+                {contractSuccess}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Error message */}
+          {contractError && (
+            <Alert className="mb-4 bg-red-50 border-red-200">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertTitle className="ml-2 text-red-800">Error</AlertTitle>
+              <AlertDescription className="text-red-700">
+                {contractError}
+              </AlertDescription>
+            </Alert>
+          )}
           
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -444,8 +517,16 @@ export function ItemDetailsPage() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setContractModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmitContract}>Create Contract</Button>
+            <Button variant="outline" onClick={() => setContractModalOpen(false)}
+                    disabled={submittingContract}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitContract} 
+              disabled={submittingContract || !!contractSuccess}
+            >
+              {submittingContract ? "Creating..." : "Create Contract"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -6,6 +6,7 @@ import { useAppSelector } from '@/app/hooks';
 export function Navbar() {
   const { isAuthenticated, roles } = useAppSelector((state) => state.auth);
   const isAdmin = roles && roles.includes('admin');
+  const isEmployer = roles && roles.includes('employer');
   
   return (
     <nav className="border-b border-gray-200 py-4">
@@ -18,12 +19,17 @@ export function Navbar() {
           <Link to="/">
             <Button variant="ghost">Home</Button>
           </Link>
-          <Link to="/marketplace">
+          {/* <Link to="/marketplace">
             <Button variant="ghost">Marketplace</Button>
-          </Link>
+          </Link> */}
           {isAuthenticated && (
             <Link to="/profile">
               <Button variant="ghost">Profile</Button>
+            </Link>
+          )}
+          {isEmployer && (
+            <Link to="/offers">
+              <Button variant="ghost">My Offers</Button>
             </Link>
           )}
           {isAdmin && (

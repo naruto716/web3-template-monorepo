@@ -6,6 +6,7 @@ import { ListItemPage } from '@/pages/ListItemPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { AdminPage } from '@/pages/AdminPage';
 import { ItemDetailsPage } from '@/pages/ItemDetailsPage';
+import { OffersPage } from '@/pages/OffersPage';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import { createBrowserRouter } from 'react-router-dom';
 
@@ -47,6 +48,14 @@ export const routes: RouteObject[] = [
         element: <ItemDetailsPage />,
       },
       {
+        path: 'offers',
+        element: (
+          <ProtectedRoute requiredRoles={['employer']}>
+            <OffersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: '*',
         element: <Navigate to="/" replace />,
       },
@@ -70,5 +79,9 @@ export const router = createBrowserRouter([
   {
     path: '/professional/:id',
     element: <ItemDetailsPage />,
+  },
+  {
+    path: '/offers',
+    element: <OffersPage />,
   },
 ]); 
