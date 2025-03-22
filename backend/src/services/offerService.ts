@@ -85,4 +85,28 @@ export const getAllOffers = async (
     logger.error('Error in getAllOffers service:', error);
     throw error;
   }
+};
+
+export const findOffers = async (params: {
+  employerId?: string;
+  talentId?: string;
+}): Promise<IOffer[]> => {
+  try {
+    const query: any = {};
+    
+    if (params.employerId) {
+      query.employerId = params.employerId;
+    }
+    if (params.talentId) {
+      query.talentId = params.talentId;
+    }
+
+    return await Offer.find(query)
+      .sort({ endDate: -1 }) // -1 for descending order
+      .populate('employerId', 'walletAddress')
+      .populate('talentId', 'walletAddress');
+  } catch (error) {
+    logger.error('Error in findOffers service:', error);
+    throw error;
+  }
 }; 

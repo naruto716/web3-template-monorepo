@@ -128,6 +128,42 @@ const router = express.Router();
  *         description: Offer not found
  */
 
+/**
+ * @swagger
+ * /api/offers/find:
+ *   get:
+ *     summary: Find offers by employerId and/or talentId
+ *     tags: [Offers]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: employerId
+ *         schema:
+ *           type: string
+ *         description: ID of the employer
+ *       - in: query
+ *         name: talentId
+ *         schema:
+ *           type: string
+ *         description: ID of the talent
+ *     responses:
+ *       200:
+ *         description: List of matching offers ordered by endDate
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
+router.get('/find', authenticateJWT, offerController.findOffers);
+
+router.get('/:id', 
+  authenticateJWT, 
+  authorize([UserRole.EMPLOYER, UserRole.PROFESSIONAL]), 
+  offerController.getOfferById
+);
+
 router.post('/', 
   authenticateJWT, 
   authorize([UserRole.EMPLOYER]), 
@@ -138,12 +174,6 @@ router.put('/:id',
   authenticateJWT, 
   authorize([UserRole.EMPLOYER, UserRole.PROFESSIONAL]), 
   offerController.updateOffer
-);
-
-router.get('/:id', 
-  authenticateJWT, 
-  authorize([UserRole.EMPLOYER, UserRole.PROFESSIONAL]), 
-  offerController.getOfferById
 );
 
 router.get('/', 

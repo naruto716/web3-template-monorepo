@@ -130,4 +130,31 @@ export const getAllOffers = async (req: AuthRequest, res: Response): Promise<voi
       error: error instanceof Error ? error.message : 'Failed to fetch offers'
     });
   }
+};
+
+export const findOffers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { employerId, talentId } = req.query;
+
+    const offers = await offerService.findOffers({
+      employerId: employerId as string,
+      talentId: talentId as string
+    });
+
+    res.status(200).json({
+      status: 200,
+      data: offers
+    });
+  } catch (error) {
+    console.error('Detailed error:', error);
+    logger.error('Error in findOffers controller:', {
+      error: error,
+      stack: error instanceof Error ? error.stack : undefined,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+    res.status(500).json({
+      status: 500,
+      error: error instanceof Error ? error.message : 'Failed to find offers'
+    });
+  }
 }; 
