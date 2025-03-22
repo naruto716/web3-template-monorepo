@@ -245,11 +245,11 @@ export function HomePage() {
                     <div className="max-h-60 overflow-auto">
                       {filteredSkills.map((skill) => (
                         <div
-                          key={skill}
+                  key={skill}
                           onClick={() => handleSkillSelect(skill)}
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                        >
-                          {skill}
+                >
+                  {skill}
                         </div>
                       ))}
                     </div>
@@ -257,7 +257,7 @@ export function HomePage() {
                 )}
               </div>
             )}
-          </div>
+        </div>
           
           <div className="mt-4 flex gap-2 justify-center">
             <Button 
@@ -307,9 +307,9 @@ export function HomePage() {
 
       {/* Professionals section with increased margin top */}
       <section className="mt-16">
-        <h2 className="text-2xl font-bold mb-6 text-center">
+          <h2 className="text-2xl font-bold mb-6 text-center">
           Professionals
-        </h2>
+          </h2>
 
         {/* Loading state */}
         {loading && (
@@ -413,8 +413,8 @@ export function HomePage() {
                         <Badge 
                           key={skill}
                           variant="skill"
-                        >
-                          {skill}
+                      >
+                        {skill}
                         </Badge>
                       ))}
                     </div>
@@ -426,19 +426,19 @@ export function HomePage() {
                         <span className="ml-1.5 font-semibold text-primary">
                           {getHighestRate(professional.skills)}
                         </span>
-                      </div>
-                    </div>
-                  </CardContent>
+                  </div>
+                </div>
+              </CardContent>
                   
                   <CardFooter className="p-4 pt-0 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40">
                     <Button variant="default" size="sm" className="w-full font-medium">
                       View Profile
                     </Button>
-                  </CardFooter>
-                </Card>
+              </CardFooter>
+            </Card>
               </Link>
-            ))}
-          </div>
+          ))}
+        </div>
         )}
 
         {/* Show total results count and pagination */}

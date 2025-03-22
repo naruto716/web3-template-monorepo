@@ -9,11 +9,23 @@ import { offerApi, Offer, OfferListResponse } from "@/services/api/offer";
 import { formatAddress } from "@/lib/utils";
 import { ethers } from "ethers";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { Calendar, Clock, Wallet, ArrowUpRight, Briefcase, AlertCircle, CheckCircle, CreditCard, FileText, MapPin, Award } from "lucide-react";
+import { Calendar, Clock, Wallet, ArrowUpRight, Briefcase, AlertCircle, CheckCircle, CreditCard, FileText, MapPin, Award, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { talentApi, Talent } from "@/services/api/talent";
+import { createOfferNFT, tradeOfferNFT, releasePayment, getOffer as getBlockchainOffer } from "@/services/web3/contracts";
+
+// Define a simple toast implementation if the imported one doesn't exist
+const useToast = () => {
+  return {
+    toast: ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
+      console.log(`${title}: ${description}`);
+      // In a real implementation, this would show a toast notification
+      // For now, we'll just log to console
+    }
+  };
+};
 
 export function OffersPage() {
   const { isAuthenticated, roles, requireAuth, LoginDialog } = useAuth();
@@ -24,9 +36,35 @@ export function OffersPage() {
   const [activeStatusTab, setActiveStatusTab] = useState<string>("all");
   const [activeRoleTab, setActiveRoleTab] = useState<string>("employer");
   const [professionals, setProfessionals] = useState<Record<string, Talent>>({});
+  const [ethProvider, setEthProvider] = useState<ethers.BrowserProvider | null>(null);
+  const { toast } = useToast();
   
+  // New state variables for blockchain operations
+  const [blockchainAction, setBlockchainAction] = useState<string | null>(null);
+  const [processingOfferId, setProcessingOfferId] = useState<string | null>(null);
+  const [transactionStep, setTransactionStep] = useState<string | null>(null);
+
   const isEmployer = roles.includes('employer');
   const isProfessional = roles.includes('professional');
+
+  // Initialize Ethereum provider
+  useEffect(() => {
+    const initProvider = async () => {
+      if (window.ethereum) {
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          setEthProvider(provider);
+        } catch (err) {
+          console.error('Error initializing provider:', err);
+          setError('Failed to connect to Ethereum provider');
+        }
+      }
+    };
+    
+    if (isAuthenticated) {
+      initProvider();
+    }
+  }, [isAuthenticated]);
 
   // Set default role tab based on user roles
   useEffect(() => {
@@ -102,6 +140,16 @@ export function OffersPage() {
     }
   };
 
+  // Get timestamp in seconds from date string
+  const getTimestamp = (dateString: string): number => {
+    try {
+      const date = new Date(dateString);
+      return Math.floor(date.getTime() / 1000);
+    } catch (_error) {
+      return Math.floor(Date.now() / 1000);
+    }
+  };
+
   // Get offers filtered by status
   const getFilteredOffers = (): Offer[] => {
     if (!offersData || !offersData.offers) return [];
@@ -132,28 +180,249 @@ export function OffersPage() {
     );
   };
 
-  // Handle accepting an offer (for professionals)
-  const handleAcceptOffer = async (offerId: string) => {
+  // Handle accepting an offer (for professionals) and creating an NFT
+  const handleAcceptOffer = async (offer: Offer) => {
+    if (!ethProvider) {
+      toast({
+        title: "Error",
+        description: "Ethereum provider not available. Please connect your wallet.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      await offerApi.updateOfferStatus(offerId, 'accepted');
+      setLoading(true);
+      setBlockchainAction("acceptance");
+      setProcessingOfferId(offer._id);
+      setTransactionStep("preparing");
+      
+      // First create the NFT on the blockchain
+      const startTimestamp = getTimestamp(offer.startDate);
+      const endTimestamp = getTimestamp(offer.endDate);
+      
+      setTransactionStep("approving");
+      
+      toast({
+        title: "Creating NFT",
+        description: "Please confirm the transaction in your wallet...",
+      });
+      
+      const result = await createOfferNFT(
+        ethProvider,
+        offer.employerId.walletAddress, // company address
+        offer.jobDescription, // skill name - could be more specific based on the offer
+        offer.totalPay, // payment amount in wei
+        startTimestamp,
+        endTimestamp
+      );
+
+      //console.log("result:", result);
+      
+      setTransactionStep("confirming");
+      
+      // Then update the offer status in the database
+      await offerApi.updateOfferStatus(offer._id, 'accepted', result.tokenId);
+      
+      setTransactionStep("completed");
+      
+      toast({
+        title: "Success!",
+        description: "Offer accepted and NFT created. Transaction hash: " + result.transactionHash.slice(0, 10) + "..."
+      });
+      
       fetchOffers(); // Refresh after update
     } catch (err) {
       console.error("Error accepting offer:", err);
       setError("Failed to accept offer. Please try again.");
+      
+      toast({
+        title: "Error",
+        description: "Failed to accept offer: " + (err instanceof Error ? err.message : String(err)),
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+      setBlockchainAction(null);
+      setProcessingOfferId(null);
+      setTransactionStep(null);
     }
   };
 
-  // Handle paying for an offer (for employers)
-  const handlePayOffer = async (offerId: string) => {
+  // Handle paying for an offer (for employers) and buying the NFT
+  const handlePayOffer = async (offer: Offer) => {
+    if (!ethProvider) {
+      toast({
+        title: "Error",
+        description: "Ethereum provider not available. Please connect your wallet.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      // In a real implementation, this would trigger a wallet transaction
-      // For now, we'll just update the status
-      await offerApi.updateOfferStatus(offerId, 'paid', 'mock-tx-hash-' + Date.now());
+      setLoading(true);
+      setBlockchainAction("payment");
+      setProcessingOfferId(offer._id);
+      setTransactionStep("preparing");
+      
+      if (!offer.paymentTxHash) {
+        throw new Error("No payment transaction hash found for offer.");
+      }
+
+      const tokenId = parseInt(offer.paymentTxHash);
+      //alert("tokenId: " + tokenId);
+      
+      setTransactionStep("fetching");
+      
+      // Verify wallet address matches the company address in the offer
+      const signer = await ethProvider.getSigner();
+      const walletAddress = await signer.getAddress();
+      
+      // First try to fetch the actual offer from the blockchain to ensure we have the correct payment amount
+      let payment = offer.totalPay;
+      let blockchainOffer;
+      
+      try {
+        blockchainOffer = await getBlockchainOffer(ethProvider, tokenId);
+        if (blockchainOffer && blockchainOffer.payment) {
+          payment = blockchainOffer.payment.toString();
+          console.log(`Using blockchain payment amount: ${payment}`);
+          
+          // Compare the wallet address with the company address in the blockchain offer
+          if (blockchainOffer.company && 
+              walletAddress.toLowerCase() !== blockchainOffer.company.toLowerCase()) {
+            throw new Error(`Only the company address (${blockchainOffer.company}) can pay for this offer. Your address: ${walletAddress}`);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn("Could not fetch blockchain offer details:", fetchErr);
+        console.log(`Using database payment amount: ${payment}`);
+        
+        // If we couldn't fetch the blockchain offer, at least verify against the database
+        if (offer.employerId && offer.employerId.walletAddress && 
+            walletAddress.toLowerCase() !== offer.employerId.walletAddress.toLowerCase()) {
+          throw new Error(`Your wallet address (${walletAddress}) doesn't match the employer address on this offer.`);
+        }
+      }
+      
+      setTransactionStep("approving");
+      
+      toast({
+        title: "Sending Payment",
+        description: "Please confirm the transaction in your wallet...",
+      });
+      
+      // Buy/trade the NFT by sending ETH
+      const result = await tradeOfferNFT(
+        ethProvider,
+        tokenId,
+        payment // Use the payment amount from the blockchain if possible
+      );
+      
+      setTransactionStep("confirming");
+      
+      // Then update the offer status in the database
+      await offerApi.updateOfferStatus(offer._id, 'working', result.hash);
+      
+      setTransactionStep("completed");
+      
+      toast({
+        title: "Success!",
+        description: "Payment sent and NFT acquired. Transaction hash: " + result.hash.slice(0, 10) + "..."
+      });
+      
       fetchOffers(); // Refresh after update
     } catch (err) {
       console.error("Error paying for offer:", err);
       setError("Failed to process payment. Please try again.");
+      
+      // Improved error message extraction
+      let errorMessage = "Failed to process payment";
+      
+      if (err instanceof Error) {
+        // For direct error messages
+        errorMessage = err.message;
+        
+        // For Ethereum contract errors
+        const ethError = err as { reason?: string; error?: { reason?: string }; data?: string; };
+        
+        // Extract the error message from various possible formats
+        if (ethError.reason) {
+          errorMessage = ethError.reason;
+        } else if (ethError.error?.reason) {
+          errorMessage = ethError.error.reason;
+        } else if (typeof ethError.data === 'string' && ethError.data.includes('Only specified company can trade')) {
+          errorMessage = "Only specified company can trade";
+        } else if (err.message.includes('execution reverted:')) {
+          // Extract message between quotes if present
+          const match = err.message.match(/execution reverted: "(.*?)"/);
+          if (match && match[1]) {
+            errorMessage = match[1]; 
+          }
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+      setBlockchainAction(null);
+      setProcessingOfferId(null);
+      setTransactionStep(null);
     }
+  };
+
+  // Add this new component for the blockchain loading indicator
+  const BlockchainLoadingIndicator = ({ action, step }: { action: string; step: string | null }) => {
+    const actionText = {
+      acceptance: "Accepting Offer",
+      payment: "Processing Payment",
+    }[action] || "Processing";
+    
+    const stepText = {
+      preparing: "Preparing transaction...",
+      fetching: "Fetching blockchain data...",
+      approving: "Waiting for wallet approval...",
+      confirming: "Confirming transaction...",
+      completed: "Transaction completed!"
+    }[step || ""] || "Processing...";
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="relative w-16 h-16">
+              <Loader2 className="w-16 h-16 animate-spin text-primary" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                {action === "acceptance" && <CheckCircle className="w-6 h-6" />}
+                {action === "payment" && <CreditCard className="w-6 h-6" />}
+              </div>
+            </div>
+            
+            <h3 className="text-xl font-semibold">{actionText}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{stepText}</p>
+            
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="bg-primary h-2.5 rounded-full animate-pulse"
+                style={{ 
+                  width: step === "completed" ? "100%" : "80%",
+                  transition: "width 0.5s ease-in-out"
+                }}
+              ></div>
+            </div>
+            
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+              Blockchain transactions may take a few moments.<br />Please don't close this window.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // If user not authenticated, prompt login
@@ -389,21 +658,23 @@ export function OffersPage() {
                     <div className="mt-5 flex justify-end">
                       {activeRoleTab === "professional" && offer.status === "waiting" && (
                         <Button 
-                          onClick={() => handleAcceptOffer(offer._id)}
+                          onClick={() => handleAcceptOffer(offer)}
                           className="bg-green-600 hover:bg-green-700 flex items-center gap-2 transition-transform duration-300 hover:scale-105 shadow-sm"
+                          disabled={loading}
                         >
                           <CheckCircle className="h-4 w-4" />
-                          Accept Offer
+                          Accept & Create NFT
                         </Button>
                       )}
                       
                       {activeRoleTab === "employer" && offer.status === "accepted" && (
                         <Button 
-                          onClick={() => handlePayOffer(offer._id)}
+                          onClick={() => handlePayOffer(offer)}
                           className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 transition-transform duration-300 hover:scale-105 shadow-sm"
+                          disabled={loading}
                         >
                           <CreditCard className="h-4 w-4" />
-                          Pay Now
+                          Pay & Buy NFT
                         </Button>
                       )}
                     </div>
@@ -414,12 +685,23 @@ export function OffersPage() {
                         <div className="bg-gray-50 rounded-lg p-4">
                           <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                             <CreditCard className="h-4 w-4 text-primary mr-2" />
-                            Payment Transaction
+                            Blockchain Transaction
                           </h4>
                           <div className="flex items-center text-sm">
                             <span className="font-mono bg-white px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 w-full break-all">
                               {offer.paymentTxHash}
                             </span>
+                          </div>
+                          <div className="mt-2">
+                            <a 
+                              href={`https://sepolia.etherscan.io/tx/${offer.paymentTxHash}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary flex items-center hover:underline mt-2"
+                            >
+                              View on Etherscan
+                              <ArrowUpRight className="h-3 w-3 ml-1" />
+                            </a>
                           </div>
                         </div>
                       </>
@@ -456,6 +738,10 @@ export function OffersPage() {
             Next
           </Button>
         </div>
+      )}
+      
+      {blockchainAction && transactionStep && (
+        <BlockchainLoadingIndicator action={blockchainAction} step={transactionStep} />
       )}
     </div>
   );

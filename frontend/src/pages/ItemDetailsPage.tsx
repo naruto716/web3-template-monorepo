@@ -101,7 +101,7 @@ export function ItemDetailsPage() {
   const formatRate = (weiRate: string): string => {
     try {
       const ethValue = parseFloat(ethers.formatEther(weiRate));
-      return `${ethValue.toFixed(2).replace(/\.?0+$/, '')} ETH/hr`;
+      return `${ethValue.toFixed(6).replace(/\.?0+$/, '')} ETH/hr`;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
       return "Rate unavailable";

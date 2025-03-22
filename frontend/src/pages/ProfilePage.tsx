@@ -90,15 +90,28 @@ export function ProfilePage() {
                     <div className="font-mono break-all">{address}</div>
                     
                     <div className="font-semibold">Roles:</div>
-                    <div>
-                      {roles && roles.map((role) => (
-                        <span
-                          key={role}
-                          className="inline-block px-2 py-1 mr-2 text-xs rounded-full bg-secondary/20"
-                        >
-                          {role}
-                        </span>
-                      ))}
+                    <div className="flex flex-wrap gap-2">
+                      {roles && roles.map((role) => {
+                        // Dynamic color mapping for different roles
+                        const colors = {
+                          professional: "bg-blue-100 text-blue-800 border border-blue-200 shadow-sm hover:bg-blue-200",
+                          employer: "bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200",
+                          admin: "bg-purple-100 text-purple-800 border border-purple-200 shadow-sm hover:bg-purple-200",
+                          // Default colors for any other roles
+                          default: "bg-amber-100 text-amber-800 border border-amber-200 shadow-sm hover:bg-amber-200"
+                        };
+                        
+                        const colorClass = colors[role as keyof typeof colors] || colors.default;
+                        
+                        return (
+                          <span
+                            key={role}
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${colorClass}`}
+                          >
+                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                          </span>
+                        );
+                      })}
                     </div>
                     
                     <div className="font-semibold">Member Since:</div>
