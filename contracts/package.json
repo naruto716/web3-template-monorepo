@@ -12,11 +12,11 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.13",
     "@types/node": "^22.13.10",
     "dotenv": "^16.4.7",
-    "hardhat": "^2.22.19",
+    "hardhat": "^2.19.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   }

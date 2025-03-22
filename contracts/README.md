@@ -13,6 +13,7 @@ npm install
 ```
 SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
 PRIVATE_KEY=YOUR_PRIVATE_KEY
+COINMARKETCAP_API_KEY=your_api_key_here
 ```
 
 ## Commands
