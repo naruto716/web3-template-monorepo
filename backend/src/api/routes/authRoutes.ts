@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestChallenge, verifyChallenge, getProfile, updateUserRoles } from '../controllers/authController';
+import { requestChallenge, verifyChallenge, getProfile, updateUserRoles, getUserId } from '../controllers/authController';
 import { authenticateJWT, authorize } from '../../utils/auth';
 import { UserRole } from '../../models/User';
 
@@ -176,5 +176,31 @@ router.get('/profile', authenticateJWT, getProfile);
  *                         type: string
  */
 router.put('/roles', authenticateJWT, authorize([UserRole.ADMIN]), updateUserRoles);
+
+/**
+ * @swagger
+ * /api/auth/userid:
+ *   get:
+ *     summary: Test getting user ID
+ *     description: Test endpoint to check if user ID can be retrieved from the authenticated request
+ *     tags: [Authentication]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User ID retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 userId:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/userid', authenticateJWT, getUserId);
 
 export default router; 
