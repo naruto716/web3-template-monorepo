@@ -6,9 +6,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { searchTalents, setSearchParams } from '@/features/talent/talentSlice';
 import { Talent, TalentSkill } from '@/services/api/talent';
 import { ethers } from 'ethers';
-import { Award, Clock, MapPin, Search } from 'lucide-react';
+import { Award, Clock, MapPin, Search, LogIn } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function HomePage() {
   const dispatch = useAppDispatch();
@@ -19,6 +20,8 @@ export function HomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const searchRef = useRef<HTMLDivElement>(null);
+  const { LoginDialog, connect, isAuthenticated } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // Handle clicks outside of search component
   useEffect(() => {
@@ -315,17 +318,33 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error state - Modified to show login prompt for 401 errors */}
         {error && (
           <div className="text-center py-12">
-            <p className="text-xl text-red-500">Error: {error}</p>
-            <Button 
-              variant="link" 
-              onClick={() => dispatch(searchTalents({}))}
-              className="mt-2"
-            >
-              Try again
-            </Button>
+            {error.includes('401') ? (
+              <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 border border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col items-center">
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
+                    <LogIn className="h-8 w-8 text-blue-600 dark:text-blue-300" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Authentication Required</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+                    Please log in to view our professional talent pool.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-xl text-red-500">Error: {error}</p>
+                <Button 
+                  variant="link" 
+                  onClick={() => dispatch(searchTalents({}))}
+                  className="mt-2"
+                >
+                  Try again
+                </Button>
+              </>
+            )}
           </div>
         )}
 
@@ -486,6 +505,9 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Include the login dialog */}
+      {LoginDialog}
     </div>
   );
 } 
