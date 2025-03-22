@@ -1,5 +1,7 @@
 import express from 'express';
 import * as itemController from '../controllers/itemController';
+import { authenticateJWT, authorize } from '../../utils/auth';
+import { UserRole } from '../../models/User';
 
 const router = express.Router();
 
@@ -108,6 +110,8 @@ router.get('/:itemId', itemController.getItem);
  *     summary: Sync item from blockchain
  *     description: Synchronize an item from the blockchain to the database
  *     tags: [Blockchain]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: itemId
@@ -127,6 +131,12 @@ router.get('/:itemId', itemController.getItem);
  *                   type: string
  *                 item:
  *                   $ref: '#/components/schemas/Item'
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Item not found on blockchain
  *         content:
@@ -140,6 +150,6 @@ router.get('/:itemId', itemController.getItem);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/:itemId/sync', itemController.syncItemFromBlockchain);
+router.post('/:itemId/sync', authenticateJWT, authorize([UserRole.ADMIN, UserRole.PROFESSIONAL]), itemController.syncItemFromBlockchain);
 
 export default router; 

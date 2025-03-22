@@ -8,6 +8,7 @@ export interface WalletService {
   isConnected: () => boolean;
   getProvider: () => ethers.BrowserProvider | null;
   getSigner: () => Promise<ethers.Signer | null>;
+  signMessage: (message: string) => Promise<string>;
 }
 
 // Implementation with real wallet connection using ethers v6
@@ -77,6 +78,7 @@ export const walletService: WalletService = {
   disconnect: () => {
     localStorage.removeItem('wallet_connected');
     localStorage.removeItem('wallet_address');
+    localStorage.removeItem('auth_token');
   },
   
   // Get the current connected address
@@ -110,6 +112,21 @@ export const walletService: WalletService = {
     } catch (error) {
       console.error("Error getting signer:", error);
       return null;
+    }
+  },
+  
+  // Sign a message using the connected wallet
+  signMessage: async (message: string) => {
+    try {
+      const signer = await walletService.getSigner();
+      if (!signer) {
+        throw new Error("No signer available. Connect wallet first.");
+      }
+      
+      return await signer.signMessage(message);
+    } catch (error) {
+      console.error("Error signing message:", error);
+      throw error;
     }
   }
 };

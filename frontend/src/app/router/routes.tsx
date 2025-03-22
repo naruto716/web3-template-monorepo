@@ -3,6 +3,9 @@ import { RootLayout } from '../layout/RootLayout';
 import { HomePage } from '@/pages/HomePage';
 import { MarketplacePage } from '@/pages/MarketplacePage';
 import { ListItemPage } from '@/pages/ListItemPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { AdminPage } from '@/pages/AdminPage';
+import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 
 export const routes: RouteObject[] = [
   {
@@ -19,7 +22,23 @@ export const routes: RouteObject[] = [
       },
       {
         path: 'list-item',
-        element: <ListItemPage />,
+        element: (
+          <ProtectedRoute requiredRoles={['employer', 'professional', 'admin']}>
+            <ListItemPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: <ProfilePage />,
+      },
+      {
+        path: 'admin',
+        element: (
+          <ProtectedRoute requiredRoles={['admin']}>
+            <AdminPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '*',
