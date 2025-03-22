@@ -1,12 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 export function HomePage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
-  
+
   // Mock data - would come from backend
   const availableSkills = [
     "Solidity",
@@ -62,84 +68,91 @@ export function HomePage() {
         
         {/* Search/Filter Component */}
         <div className="max-w-2xl mx-auto">
-          <Command className="rounded-lg border shadow-md">
-            <CommandInput 
-              placeholder="Search by skill (e.g., Solidity, React, Smart Contracts...)" 
-            />
-            <CommandList>
-              <CommandEmpty>No skills found.</CommandEmpty>
-              <CommandGroup>
-                {availableSkills.map((skill) => (
-                  <CommandItem
-                    key={skill}
-                    onSelect={() => setSelectedSkill(skill)}
-                    value={skill}
-                  >
-                    {skill}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+          <Select onValueChange={(value: string) => setSelectedSkill(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a skill to filter by..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableSkills.map((skill) => (
+                <SelectItem key={skill} value={skill}>
+                  {skill}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedSkill && (
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedSkill(null)}
+              className="mt-2"
+            >
+              Clear Filter
+            </Button>
+          )}
         </div>
       </section>
 
       <section>
         {selectedSkill ? (
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              Professionals with {selectedSkill} expertise
-            </h2>
-            <Button 
-              variant="ghost" 
-              onClick={() => setSelectedSkill(null)}
-            >
-              Clear Filter
-            </Button>
-          </div>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Professionals with {selectedSkill} expertise
+          </h2>
         ) : (
           <h2 className="text-2xl font-bold mb-6 text-center">
             Featured Professionals
           </h2>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {filteredProfessionals.map((professional) => (
-            <Card key={professional.id}>
-              <CardHeader>
-                <CardTitle>{professional.name}</CardTitle>
-                <CardDescription>{professional.expertise}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="h-32 bg-gray-100 rounded-md flex items-center justify-center">
-                    <span className="text-gray-500">Profile Photo</span>
+        {filteredProfessionals.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-xl text-gray-500">No professionals found with {selectedSkill} expertise</p>
+            <Button 
+              variant="link" 
+              onClick={() => setSelectedSkill(null)}
+              className="mt-2"
+            >
+              View all professionals
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filteredProfessionals.map((professional) => (
+              <Card key={professional.id}>
+                <CardHeader>
+                  <CardTitle>{professional.name}</CardTitle>
+                  <CardDescription>{professional.expertise}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="h-32 bg-gray-100 rounded-md flex items-center justify-center">
+                      <span className="text-gray-500">Profile Photo</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Experience:</span>
+                      <span className="font-medium">{professional.experience}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {professional.skills.map((skill) => (
+                        <span 
+                          key={skill}
+                          className="bg-secondary/20 px-2 py-1 rounded-full text-xs"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Experience:</span>
-                    <span className="font-medium">{professional.experience}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {professional.skills.map((skill) => (
-                      <span 
-                        key={skill}
-                        className="bg-secondary/20 px-2 py-1 rounded-full text-xs"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <span className="text-sm font-medium">{professional.rate}</span>
-                <Link to={`/professional/${professional.id}`}>
-                  <Button variant="outline" size="sm">View Profile</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <span className="text-sm font-medium">{professional.rate}</span>
+                  <Link to={`/professional/${professional.id}`}>
+                    <Button variant="outline" size="sm">View Profile</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="bg-gray-50 py-10 rounded-lg">
