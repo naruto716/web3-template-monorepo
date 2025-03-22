@@ -15,6 +15,9 @@ import { Clock, MapPin, Wallet, Award, GraduationCap, Briefcase, Calendar, Alert
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { offerApi, OfferCreateRequest } from "@/services/api/offer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ContractTimeline } from "@/features/contracts/components/ContractTimeline";
+import { contractsApi } from "@/services/api/contracts";
+import { Offer } from "@/services/api/offer";
 
 // Mock data to supplement API data - will be replaced with blockchain data later
 const mockEducation = {
@@ -73,9 +76,12 @@ export function ItemDetailsPage() {
   const [submittingContract, setSubmittingContract] = useState(false);
   const [contractSuccess, setContractSuccess] = useState<string | null>(null);
   const [contractError, setContractError] = useState<string | null>(null);
+  const [contracts, setContracts] = useState<Offer[]>([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
 
   // Check if user is an employer
   const isEmployer = roles.includes('employer');
+  const isAdmin = roles.includes('admin');
 
   useEffect(() => {
     async function fetchProfessionalDetails() {
@@ -96,6 +102,25 @@ export function ItemDetailsPage() {
 
     fetchProfessionalDetails();
   }, [id]);
+
+  // Fetch contract history if user is authenticated
+  useEffect(() => {
+    async function fetchContractHistory() {
+      if (!id || !isAuthenticated) return;
+      
+      try {
+        setContractsLoading(true);
+        const response = await contractsApi.getContractsByTalentId(id);
+        setContracts(response.offers);
+      } catch (err) {
+        console.error("Error fetching contract history:", err);
+      } finally {
+        setContractsLoading(false);
+      }
+    }
+
+    fetchContractHistory();
+  }, [id, isAuthenticated]);
 
   // Format hourly rate from wei to ETH
   const formatRate = (weiRate: string): string => {
@@ -398,6 +423,17 @@ export function ItemDetailsPage() {
           <Button variant="outline">Contact</Button>
         </CardFooter>
       </Card>
+
+      {/* Contract History Section - Only shown to authenticated users */}
+      {isAuthenticated && (isEmployer || isAdmin) && (
+        <div className="max-w-4xl mx-auto mt-8">
+          <ContractTimeline 
+            contracts={contracts}
+            loading={contractsLoading}
+            title={`Contract History: ${professional?.name || 'Professional'}`}
+          />
+        </div>
+      )}
 
       {/* Login Dialog for authentication */}
       {LoginDialog}
