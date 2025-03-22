@@ -46,6 +46,7 @@ export function ProfilePage() {
     setContractsLoading(true);
     
     try {
+      // Get all contracts for the user, regardless of role
       const response = await contractsApi.getUserContracts();
       setContracts(response.offers);
     } catch (err) {
