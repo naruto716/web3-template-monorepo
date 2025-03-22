@@ -40,6 +40,7 @@ export interface Talent {
   experience: string;
   location: string;
   walletAddress: string;
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
   matchedSkills: string[];

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import SimpleMarketplaceABI from './SimpleMarketplace.json';
+import SimpleMarketplaceABI from '../TestContracts/SimpleMarketplace.json';
 
 // Contract address
 const MARKETPLACE_ADDRESS = SimpleMarketplaceABI.address;
