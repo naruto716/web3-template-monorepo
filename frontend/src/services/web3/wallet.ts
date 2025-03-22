@@ -79,6 +79,7 @@ export const walletService: WalletService = {
     localStorage.removeItem('wallet_connected');
     localStorage.removeItem('wallet_address');
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_roles');
   },
   
   // Get the current connected address
