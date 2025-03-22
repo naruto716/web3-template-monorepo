@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { searchTalents, setSearchParams } from '@/features/talent/talentSlice';
 import { Talent, TalentSkill } from '@/services/api/talent';
 import { ethers } from 'ethers';
-import { Search, MapPin, Clock, Award, Wallet } from 'lucide-react';
+import { Award, Clock, MapPin, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export function HomePage() {
   const dispatch = useAppDispatch();
@@ -16,6 +16,8 @@ export function HomePage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 16;
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Handle clicks outside of search component
@@ -52,14 +54,14 @@ export function HomePage() {
     skill.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Load talents on component mount
+  // Load talents on component mount or when page changes
   useEffect(() => {
     try {
-      dispatch(searchTalents({}));
+      dispatch(searchTalents({ page: currentPage, limit: itemsPerPage }));
     } catch (err) {
       console.error('Error fetching talents:', err);
     }
-  }, [dispatch]);
+  }, [dispatch, currentPage, itemsPerPage]);
 
   // Handle search submission (both for skills and free text)
   const handleSearch = () => {
@@ -86,13 +88,16 @@ export function HomePage() {
   const handleSkillSelect = (skill: string) => {
     setSelectedSkill(skill);
     setSearchQuery(skill);
+    setCurrentPage(1); // Reset to first page when changing search/filters
     
     // Update search params in the store and trigger a search
     dispatch(setSearchParams({ 
       skills: [skill],
-      query: undefined
+      query: undefined,
+      page: 1,
+      limit: itemsPerPage
     }));
-    dispatch(searchTalents({ skills: [skill] }));
+    dispatch(searchTalents({ skills: [skill], page: 1, limit: itemsPerPage }));
     setIsOpen(false);
   };
 
@@ -100,8 +105,9 @@ export function HomePage() {
   const handleClearSearch = () => {
     setSelectedSkill(null);
     setSearchQuery('');
-    dispatch(setSearchParams({ skills: undefined, query: undefined }));
-    dispatch(searchTalents({}));
+    setCurrentPage(1); // Reset to first page
+    dispatch(setSearchParams({ skills: undefined, query: undefined, page: 1, limit: itemsPerPage }));
+    dispatch(searchTalents({ page: 1, limit: itemsPerPage }));
   };
 
   // Safely access the talents array
@@ -166,9 +172,34 @@ export function HomePage() {
     return skills?.map(skill => skill.name) || [];
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    
+    // Build search params based on current state
+    const searchParams: { 
+      page: number; 
+      limit: number; 
+      skills?: string[]; 
+      query?: string;
+    } = { 
+      page: newPage, 
+      limit: itemsPerPage 
+    };
+    
+    if (selectedSkill) {
+      searchParams.skills = [selectedSkill];
+    } else if (searchQuery) {
+      searchParams.query = searchQuery;
+    }
+    
+    // Update search params and fetch new page
+    dispatch(setSearchParams({ ...searchParams }));
+    dispatch(searchTalents(searchParams));
+  };
+
   return (
     <div className="space-y-12">
-      <section className="p-20 text-center">
+      <section className="pt-32 pb-20 px-20 text-center">
         <h1 className="text-4xl font-bold mb-4">
           Welcome to Web3 Labor Marketplace!
         </h1>
@@ -361,10 +392,36 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Show total results count */}
+        {/* Show total results count and pagination */}
         {!loading && !error && safeTalents.length > 0 && totalResults > 0 && (
-          <div className="text-center mt-6 text-sm text-gray-500">
-            Showing {safeTalents.length} of {totalResults} professionals
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <p className="text-sm text-gray-500">
+              Showing {safeTalents.length} of {totalResults} professionals
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage <= 1}
+              >
+                Previous
+              </Button>
+              
+              <span className="text-sm mx-2">
+                Page {currentPage} of {Math.ceil(totalResults / itemsPerPage)}
+              </span>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage >= Math.ceil(totalResults / itemsPerPage)}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         )}
       </section>
