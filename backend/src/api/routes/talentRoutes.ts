@@ -161,7 +161,7 @@ router.get('/search', authenticateJWT, authorize([UserRole.EMPLOYER]), talentCon
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:id', authenticateJWT, authorize([UserRole.EMPLOYER]), talentController.getTalentById);
+router.get('/:id', authenticateJWT, authorize([UserRole.EMPLOYER, UserRole.PROFESSIONAL]), talentController.getTalentById);
 
 /**
  * @swagger

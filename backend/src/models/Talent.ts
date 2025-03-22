@@ -9,6 +9,7 @@ interface ISkill {
 
 // Interface for Talent document
 export interface ITalent extends Document {
+  userId: Schema.Types.ObjectId;
   name: string;
   description: string;
   skills: ISkill[];
@@ -40,6 +41,12 @@ const skillSchema = new Schema<ISkill>({
 
 // Define Talent schema
 const talentSchema = new Schema<ITalent>({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true
+  },
   name: {
     type: String,
     required: true,
