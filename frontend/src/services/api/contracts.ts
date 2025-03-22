@@ -99,5 +99,41 @@ export const contractsApi = {
         }
       };
     }
+  },
+  
+  // Find contracts between a specific employer and talent
+  findContractsBetween: async (employerId: string, talentId: string): Promise<OfferListResponse> => {
+    try {
+      if (!employerId || !talentId) {
+        throw new Error("Both employerId and talentId are required MongoDB IDs");
+      }
+      
+      const response = await client.get<{ status: number; data: OfferListResponse }>(
+        `/offers/find?employerId=${employerId}&talentId=${talentId}`
+      );
+      
+      // Ensure response has the expected structure
+      const offers = response?.data?.data?.offers || [];
+      
+      return {
+        offers,
+        pagination: {
+          currentPage: 1, 
+          totalPages: 1, 
+          totalItems: offers.length 
+        }
+      };
+    } catch (error) {
+      console.error(`Error finding contracts between employer ${employerId} and talent ${talentId}:`, error);
+      // Return a default empty response
+      return {
+        offers: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0
+        }
+      };
+    }
   }
 }; 

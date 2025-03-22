@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ContractTimeline } from "@/features/contracts/components/ContractTimeline";
 import { contractsApi } from "@/services/api/contracts";
 import { Offer } from "@/services/api/offer";
+import { authApi } from "@/services/api/auth";
 
 // Mock data to supplement API data - will be replaced with blockchain data later
 const mockEducation = {
@@ -110,6 +111,27 @@ export function ItemDetailsPage() {
       
       try {
         setContractsLoading(true);
+        
+        // If we have both the current user ID (for employer) and the talent ID
+        // We can fetch contracts specifically between them
+        if (roles.includes('employer') && id) {
+          try {
+            // Get the user's profile to get their employer ID
+            const userProfile = await authApi.getProfile();
+            
+            // Only proceed if we have a MongoDB ID for the employer
+            if (userProfile._id) {
+              const response = await contractsApi.findContractsBetween(userProfile._id, id);
+              setContracts(response.offers);
+              return;
+            }
+          } catch (err) {
+            console.error("Error getting user profile or matching contracts:", err);
+            // Continue to fallback method
+          }
+        }
+        
+        // Fallback to getting all contracts for this talent
         const response = await contractsApi.getContractsByTalentId(id);
         setContracts(response.offers);
       } catch (err) {
@@ -120,7 +142,7 @@ export function ItemDetailsPage() {
     }
 
     fetchContractHistory();
-  }, [id, isAuthenticated]);
+  }, [id, isAuthenticated, roles]);
 
   // Format hourly rate from wei to ETH
   const formatRate = (weiRate: string): string => {

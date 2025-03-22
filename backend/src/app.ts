@@ -25,7 +25,7 @@ connectDatabase()
     logger.info('Database connection established');
     
     // Initialize blockchain event listeners after database connection
-    initializeEventListeners();
+    // initializeEventListeners();
   })
   .catch((error) => {
     logger.error('Failed to connect to database:', error);

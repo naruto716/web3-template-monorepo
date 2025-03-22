@@ -23,6 +23,7 @@ export interface AuthVerifyResponse {
 }
 
 export interface UserProfile {
+  _id?: string;
   walletAddress: string;
   roles: string[];
   createdAt: string;
