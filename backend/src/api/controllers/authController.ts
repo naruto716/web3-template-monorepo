@@ -90,6 +90,7 @@ export const verifyChallenge = async (req: Request, res: Response): Promise<void
       message: 'Authentication successful',
       token,
       user: {
+        id: user._id,
         walletAddress: user.walletAddress,
         roles: user.roles,
       },
@@ -173,6 +174,26 @@ export const updateUserRoles = async (req: AuthRequest, res: Response): Promise<
     });
   } catch (error) {
     logger.error('Error in updateUserRoles:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get the user ID of the authenticated user
+ */
+export const getUserId = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    
+    res.status(200).json({
+      message: 'User ID retrieved successfully',
+      userId: req.user.id
+    });
+  } catch (error) {
+    logger.error('Error in getUserId:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }; 
