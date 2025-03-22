@@ -37,3 +37,10 @@ Deploy to Sepolia:
 ```bash
 npx hardhat run scripts/deploy.ts --network sepolia
 ```
+
+## Deployed Contracts (Sepolia)
+
+The following contracts are deployed on Sepolia testnet:
+
+- **Talents Contract**: [`0x370DbaE6140b04811385D30c5aDBE80e63f06d65`](https://sepolia.etherscan.io/address/0x370DbaE6140b04811385D30c5aDBE80e63f06d65)
+- **SkillNFT_And_Escrow Contract**: [`0xc8Ac71f2B3c3D8cc31004694ced6D960C860f7f3`](https://sepolia.etherscan.io/address/0xc8Ac71f2B3c3D8cc31004694ced6D960C860f7f3)
