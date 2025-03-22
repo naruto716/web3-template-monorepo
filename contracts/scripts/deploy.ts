@@ -4,7 +4,7 @@ import * as path from "path";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  console.log("🚀 Deploying contracts with account:", deployer.address);
+  console.log("🚀 Deploying with:", deployer.address);
 
   const deploymentsPath = path.join(__dirname, "../../deployments.json");
   const deployments = fs.existsSync(deploymentsPath)
@@ -27,9 +27,9 @@ async function main() {
   deployments["Talents"] = talentsAddress;
   console.log(`✅ Talents deployed at: ${talentsAddress}`);
 
-  // Save combined deployments
+  // Save to deployments.json
   fs.writeFileSync(deploymentsPath, JSON.stringify(deployments, null, 2));
-  console.log("📦 Deployment addresses saved to deployments.json");
+  console.log("📦 Deployments saved to deployments.json");
 }
 
 main().catch((error) => {
