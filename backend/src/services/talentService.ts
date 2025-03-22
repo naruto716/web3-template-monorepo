@@ -172,4 +172,24 @@ export const searchTalents = async (
     logger.error('Error in searchTalents service:', error);
     throw error;
   }
+};
+
+export const getTalentById = async (id: string): Promise<ITalent | null> => {
+  try {
+    const talent = await Talent.findById(id);
+    return talent;
+  } catch (error) {
+    logger.error('Error in getTalentById service:', error);
+    throw error;
+  }
+};
+
+export const getTalentByWalletAddress = async (walletAddress: string): Promise<ITalent | null> => {
+  try {
+    const talent = await Talent.findOne({ walletAddress });
+    return talent;
+  } catch (error) {
+    logger.error('Error in getTalentByWalletAddress service:', error);
+    throw error;
+  }
 }; 
