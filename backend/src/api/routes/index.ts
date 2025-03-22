@@ -3,6 +3,7 @@ import itemRoutes from './itemRoutes';
 import transactionRoutes from './transactionRoutes';
 import talentRoutes from './talentRoutes';
 import authRoutes from './authRoutes';
+import offerRoutes from './offerRoutes';
 
 
 /**
@@ -27,6 +28,7 @@ router.use('/items', itemRoutes);
 router.use('/transactions', transactionRoutes);
 router.use('/talents', talentRoutes);
 router.use('/auth', authRoutes);
+router.use('/offers', offerRoutes);
 
 /**
  * @swagger

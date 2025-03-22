@@ -26,11 +26,11 @@ export const verifySignature = (
 // Generate a JWT token for a user
 export const generateToken = (user: IUser): string => {
   const secretKey = process.env.JWT_SECRET;
-  
+
   if (!secretKey) {
     throw new Error('JWT_SECRET environment variable is not defined');
   }
-  
+
   return jwt.sign(
     {
       walletAddress: user.walletAddress,
@@ -46,8 +46,10 @@ export const generateToken = (user: IUser): string => {
 // Define the structure for the authenticated request
 export interface AuthRequest extends Request {
   user?: {
+    id: string;
     walletAddress: string;
     roles: UserRole[];
+    role?: string;  // For compatibility with existing code
   };
 }
 
@@ -59,29 +61,35 @@ export const authenticateJWT = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json({ error: 'Unauthorized - No token provided' });
       return;
     }
-    
+
     const token = authHeader.split(' ')[1];
     const secretKey = process.env.JWT_SECRET;
-    
+
     if (!secretKey) {
       throw new Error('JWT_SECRET environment variable is not defined');
     }
-    
-    const decoded = jwt.verify(token, secretKey) as { 
+
+    const decoded = jwt.verify(token, secretKey) as {
       walletAddress: string;
       roles: UserRole[];
     };
-    
+
+    // Find user to get their ID
+    const user = await User.findOne({ walletAddress: decoded.walletAddress });
+    if (!user) {
+      res.status(401).json({ error: 'Unauthorized - User not found' });
+      return;
+    }
     req.user = {
+      id: user._id?.toString() ?? '',
       walletAddress: decoded.walletAddress,
       roles: decoded.roles,
     };
-    
     next();
   } catch (error) {
     res.status(401).json({ error: 'Unauthorized - Invalid token' });
@@ -95,14 +103,14 @@ export const authorize = (allowedRoles: UserRole[]) => {
       res.status(401).json({ error: 'Unauthorized - Authentication required' });
       return;
     }
-    
+
     const hasPermission = req.user.roles.some(role => allowedRoles.includes(role as UserRole));
-    
+
     if (!hasPermission) {
       res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
       return;
     }
-    
+
     next();
   };
 }; 
