@@ -57,10 +57,35 @@ export const offerApi = {
 
   // Get all offers with pagination
   getAllOffers: async (page = 1, limit = 10, role = 'employer'): Promise<OfferListResponse> => {
-    const response = await client.get<{ status: number; data: OfferListResponse }>(
-      `/offers?page=${page}&limit=${limit}&role=${role}`
-    );
-    return response.data.data;
+    try {
+      const response = await client.get<{ status: number; data: OfferListResponse }>(
+        `/offers?page=${page}&limit=${limit}&role=${role}`
+      );
+      
+      // Ensure response has the expected structure
+      const offers = response?.data?.data?.offers || [];
+      const pagination = response?.data?.data?.pagination || { 
+        currentPage: page, 
+        totalPages: 1, 
+        totalItems: offers.length 
+      };
+      
+      return {
+        offers,
+        pagination
+      };
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      // Return a default empty response
+      return {
+        offers: [],
+        pagination: {
+          currentPage: page,
+          totalPages: 1,
+          totalItems: 0
+        }
+      };
+    }
   },
 
   // Update offer status

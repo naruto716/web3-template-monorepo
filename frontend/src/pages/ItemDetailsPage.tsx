@@ -163,9 +163,13 @@ export function ItemDetailsPage() {
     setContractSuccess(null);
     setContractError(null);
     
+    // Calculate tomorrow's date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
     setContractForm({
       jobDescription: '',
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: tomorrow.toISOString().split('T')[0],
       endDate: '',
       totalWorkHours: 40,
       totalPay: (parseFloat(hourlyRateEth) * 40).toString(),

@@ -245,7 +245,7 @@ export function OffersPage() {
           ) : (
             <div className="space-y-6">
               {getFilteredOffers().map((offer) => {
-                const professional = professionals[offer.talentId._id];
+                const professional = offer.talentId && offer.talentId._id ? professionals[offer.talentId._id] : undefined;
                 
                 return (
                 <Card 
@@ -312,13 +312,13 @@ export function OffersPage() {
                           <div className="flex items-center text-sm">
                             <span className="font-mono bg-white px-3 py-1.5 rounded-md border border-gray-200 text-gray-700 w-full break-all">
                               {activeRoleTab === "employer" 
-                                ? formatAddress(offer.talentId.walletAddress)
-                                : formatAddress(offer.employerId.walletAddress)
+                                ? (offer.talentId && offer.talentId.walletAddress ? formatAddress(offer.talentId.walletAddress) : "Address unavailable")
+                                : (offer.employerId && offer.employerId.walletAddress ? formatAddress(offer.employerId.walletAddress) : "Address unavailable")
                               }
                             </span>
                           </div>
                           
-                          {activeRoleTab === "employer" && (
+                          {activeRoleTab === "employer" && offer.talentId && offer.talentId._id && (
                             <div className="flex items-center">
                               <Link 
                                 to={`/professional/${offer.talentId._id}`}
@@ -432,7 +432,7 @@ export function OffersPage() {
         </TabsContent>
       </Tabs>
       
-      {offersData && offersData.pagination.totalPages > 1 && (
+      {offersData && offersData.pagination && offersData.pagination.totalPages > 1 && (
         <div className="flex justify-center mt-8 gap-4">
           <Button 
             variant="outline" 
