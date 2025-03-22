@@ -1,12 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
-import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 export function HomePage() {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
-  
+
   // Mock data - would come from backend
   const availableSkills = [
     "Solidity",
@@ -62,39 +68,35 @@ export function HomePage() {
         
         {/* Search/Filter Component */}
         <div className="max-w-2xl mx-auto">
-          <Command className="rounded-lg border shadow-md">
-            <CommandInput 
-              placeholder="Search by skill (e.g., Solidity, React, Smart Contracts...)" 
-            />
-            <CommandEmpty>No skills found.</CommandEmpty>
-            <CommandGroup>
+          <Select onValueChange={(value) => setSelectedSkill(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a skill to filter by..." />
+            </SelectTrigger>
+            <SelectContent>
               {availableSkills.map((skill) => (
-                <CommandItem
-                  key={skill}
-                  onSelect={() => setSelectedSkill(skill)}
-                  className="cursor-pointer"
-                >
+                <SelectItem key={skill} value={skill}>
                   {skill}
-                </CommandItem>
+                </SelectItem>
               ))}
-            </CommandGroup>
-          </Command>
+            </SelectContent>
+          </Select>
+          {selectedSkill && (
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedSkill(null)}
+              className="mt-2"
+            >
+              Clear Filter
+            </Button>
+          )}
         </div>
       </section>
 
       <section>
         {selectedSkill ? (
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              Professionals with {selectedSkill} expertise
-            </h2>
-            <Button 
-              variant="ghost" 
-              onClick={() => setSelectedSkill(null)}
-            >
-              Clear Filter
-            </Button>
-          </div>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Professionals with {selectedSkill} expertise
+          </h2>
         ) : (
           <h2 className="text-2xl font-bold mb-6 text-center">
             Featured Professionals
