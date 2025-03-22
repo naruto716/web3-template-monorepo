@@ -70,4 +70,66 @@ export const searchTalents = async (req: Request, res: Response): Promise<void> 
       error: 'Failed to search talents'
     });
   }
+};
+
+export const getTalentById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    
+    const talent = await talentService.getTalentById(id);
+    
+    if (!talent) {
+      res.status(404).json({
+        status: 404,
+        error: 'Talent not found'
+      });
+      return;
+    }
+
+    res.status(200).json({
+      status: 200,
+      data: talent
+    });
+  } catch (error) {
+    logger.error('Error in getTalentById controller:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      params: req.params
+    });
+    res.status(500).json({
+      status: 500,
+      error: 'Failed to retrieve talent'
+    });
+  }
+};
+
+export const getTalentByWalletAddress = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { walletAddress } = req.params;
+    
+    const talent = await talentService.getTalentByWalletAddress(walletAddress);
+    
+    if (!talent) {
+      res.status(404).json({
+        status: 404,
+        error: 'Talent not found'
+      });
+      return;
+    }
+
+    res.status(200).json({
+      status: 200,
+      data: talent
+    });
+  } catch (error) {
+    logger.error('Error in getTalentByWalletAddress controller:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      params: req.params
+    });
+    res.status(500).json({
+      status: 500,
+      error: 'Failed to retrieve talent'
+    });
+  }
 }; 

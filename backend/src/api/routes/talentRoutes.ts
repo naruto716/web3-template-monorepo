@@ -119,4 +119,92 @@ const router = express.Router();
  */
 router.get('/search', authenticateJWT, authorize([UserRole.EMPLOYER]), talentController.searchTalents);
 
+/**
+ * @swagger
+ * /api/talents/{id}:
+ *   get:
+ *     summary: Get talent by ID
+ *     description: Retrieve a talent's details by their ID
+ *     tags: [Talents]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The talent's ID
+ *     responses:
+ *       200:
+ *         description: Talent details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   $ref: '#/components/schemas/Talent'
+ *       404:
+ *         description: Talent not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/:id', authenticateJWT, authorize([UserRole.EMPLOYER]), talentController.getTalentById);
+
+/**
+ * @swagger
+ * /api/talents/wallet/{walletAddress}:
+ *   get:
+ *     summary: Get talent by wallet address
+ *     description: Retrieve a talent's details by their wallet address
+ *     tags: [Talents]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: walletAddress
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The talent's wallet address
+ *     responses:
+ *       200:
+ *         description: Talent details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   $ref: '#/components/schemas/Talent'
+ *       404:
+ *         description: Talent not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/wallet/:walletAddress', authenticateJWT, authorize([UserRole.EMPLOYER, UserRole.PROFESSIONAL]), talentController.getTalentByWalletAddress);
+
 export default router; 
