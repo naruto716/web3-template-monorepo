@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { searchTalents, setSearchParams } from '@/features/talent/talentSlice';
 import { Talent, TalentSkill } from '@/services/api/talent';
 import { ethers } from 'ethers';
-import { Search } from 'lucide-react';
+import { Search, MapPin, Clock, Award, Wallet } from 'lucide-react';
 
 export function HomePage() {
   const dispatch = useAppDispatch();
@@ -109,33 +110,59 @@ export function HomePage() {
   // Format ETH rate from wei
   const formatRate = (weiRate: string): string => {
     try {
-      return `${ethers.formatEther(weiRate)} ETH/hr`;
+      // Directly format to a number with 2 decimal places max
+      const ethValue = parseFloat(ethers.formatEther(weiRate));
+      return `${ethValue.toFixed(2).replace(/\.?0+$/, '')} ETH/hr`;
     } catch (_err) {
       return "Rate unavailable";
     }
   };
 
-  // Get highest rate from skills
+  // Get highest rate from skills - completely rewritten to ensure proper conversion
   const getHighestRate = (skills: TalentSkill[]): string => {
     if (!skills || skills.length === 0) return "Rate unavailable";
     
-    const highestRate = skills.reduce(
-      (max, skill) => {
+    try {
+      // Check if any skills are matched (search is active)
+      const matchedSkills = skills.filter(skill => skill.isMatched);
+      
+      // If search is active, use rate from matched skill
+      if (matchedSkills.length > 0) {
+        return formatRate(matchedSkills[0].hourlyRate);
+      }
+      
+      // Find highest rate from all skills
+      let highestRate = "0";
+      for (const skill of skills) {
         try {
-          const rate = ethers.parseEther(skill.hourlyRate);
-          return rate > max ? rate : max;
-        } catch (_err) {
-          return max;
+          const currentRate = ethers.parseUnits(skill.hourlyRate, 18);
+          const previousHighest = ethers.parseUnits(highestRate, 18);
+          if (currentRate > previousHighest) {
+            highestRate = skill.hourlyRate;
+          }
+        } catch (err) {
+          console.error("Error parsing rate:", err);
         }
-      },
-      ethers.parseEther("0")
-    );
-    
-    return formatRate(highestRate.toString());
+      }
+      
+      return formatRate(highestRate);
+    } catch (err) {
+      console.error("Error in getHighestRate:", err);
+      return "Rate unavailable";
+    }
   };
 
-  // Get all skill names from a talent
+  // Get skill names from a talent
   const getSkillNames = (skills: TalentSkill[]): string[] => {
+    // Check if any skills are matched (search is active)
+    const matchedSkills = skills.filter(skill => skill.isMatched);
+    
+    // If search is active, only show matched skills
+    if (matchedSkills.length > 0) {
+      return matchedSkills.map(skill => skill.name);
+    }
+    
+    // Otherwise, show all skills
     return skills?.map(skill => skill.name) || [];
   };
 
@@ -261,41 +288,75 @@ export function HomePage() {
 
         {/* Results grid */}
         {!loading && !error && safeTalents.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
             {safeTalents.map((professional: Talent) => (
-              <Card key={professional._id}>
-                <CardHeader>
-                  <CardTitle>{professional.name}</CardTitle>
-                  <CardDescription>{professional.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="h-32 bg-gray-100 rounded-md flex items-center justify-center">
-                      <span className="text-gray-500">Profile Photo</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Experience:</span>
-                      <span className="font-medium capitalize">{professional.experience}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {getSkillNames(professional.skills).map((skill) => (
-                        <span 
-                          key={skill}
-                          className="bg-secondary/20 px-2 py-1 rounded-full text-xs"
-                        >
-                          {skill}
-                        </span>
-                      ))}
+              <Link to={`/professional/${professional._id}`} key={professional._id} className="block">
+                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800 group p-0 h-full hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                  <div className="relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10 z-10 group-hover:from-black/50 group-hover:to-black/5 transition-all duration-800 ease-out group-hover:scale-105" />
+                    <img 
+                      src={professional.imageUrl || "https://placehold.co/600x400/gray/white?text=No+Image"} 
+                      alt={`${professional.name}'s profile`}
+                      className="w-full h-52 object-cover object-center group-hover:scale-105 transition-all duration-500 ease-in-out"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
+                      <h3 className="text-xl font-bold text-white group-hover:text-white/90">{professional.name}</h3>
+                      <div className="flex items-center mt-1 text-white/90 group-hover:text-white/80">
+                        <MapPin className="h-3.5 w-3.5 mr-1" />
+                        <p className="text-sm">{professional.location}</p>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <span className="text-sm font-medium">{getHighestRate(professional.skills)}</span>
-                  <Link to={`/professional/${professional._id}`}>
-                    <Button variant="outline" size="sm">View Profile</Button>
-                  </Link>
-                </CardFooter>
-              </Card>
+                  
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <Badge 
+                        variant="skill" 
+                        className="capitalize flex items-center gap-1"
+                      >
+                        <Award className="h-3 w-3" />
+                        {professional.experience}
+                      </Badge>
+                      <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-full">
+                        <div className={`w-2.5 h-2.5 rounded-full mr-2 ${professional.availability ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <span>{professional.availability ? 'Available Now' : 'Unavailable'}</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                      {professional.description}
+                    </p>
+                    
+                    <h4 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Skills</h4>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {getSkillNames(professional.skills).map((skill) => (
+                        <Badge 
+                          key={skill}
+                          variant="skill"
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 border-t pt-3 mt-3">
+                      <div className="flex items-center">
+                        <Clock className="h-3.5 w-3.5 mr-1.5" />
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">Hourly Rate:</span>
+                        <span className="ml-1.5 font-semibold text-primary">
+                          {getHighestRate(professional.skills)}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  
+                  <CardFooter className="p-4 pt-0 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/40">
+                    <Button variant="default" size="sm" className="w-full font-medium">
+                      View Profile
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
