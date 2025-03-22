@@ -22,9 +22,9 @@ contract SkillContract is ERC721URIStorage, Ownable {
     event AgreementCreated(uint256 agreementId, address freelancer, address company, string skill, uint256 payment);
     event PaymentReleased(address freelancer, uint256 amount);
 
-    constructor() ERC721("EmploymentNFT", "EMP") {}
+    // ✅ FIX: Remove `msg.sender` from `Ownable()`
+    constructor() ERC721("EmploymentNFT", "EMP") Ownable(msg.sender) {}
 
-    // ✅ Step 1: Upload Agreement (Write to Chain)
     function createAgreement(
         address _freelancer,
         string memory _skill,
@@ -45,25 +45,21 @@ contract SkillContract is ERC721URIStorage, Ownable {
             active: true
         });
 
-        // Store funds in the contract
         freelancerBalance[_freelancer] += msg.value;
 
         emit AgreementCreated(agreementCount, _freelancer, msg.sender, _skill, msg.value);
     }
 
-    // ✅ Step 2: Read Data (Fetch Agreements)
     function getAgreement(uint256 _agreementId) public view returns (Agreement memory) {
         return agreements[_agreementId];
     }
 
-    // ✅ Step 3: Mint NFT for Proof of Work
     function mintNFT(address _to, string memory _tokenURI) public onlyOwner {
         uint256 newItemId = agreementCount;
         _mint(_to, newItemId);
         _setTokenURI(newItemId, _tokenURI);
     }
 
-    // ✅ Step 4: Release Payments (Freelancer Withdrawal)
     function withdrawPayments() external {
         uint256 amount = freelancerBalance[msg.sender];
         require(amount > 0, "No funds available");
