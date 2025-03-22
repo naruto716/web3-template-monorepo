@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../../utils/auth';
 import * as offerService from '../../services/offerService';
 import logger from '../../utils/logger';
+import { UserRole } from '../../models/User';
+import { Talent } from '../../models/Talent';
 
 export const createOffer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -23,10 +25,15 @@ export const createOffer = async (req: AuthRequest, res: Response): Promise<void
       data: offer
     });
   } catch (error) {
-    logger.error('Error in createOffer controller:', error);
+    console.error('Detailed error:', error);
+    logger.error('Error in createOffer controller:', {
+      error: error,
+      stack: error instanceof Error ? error.stack : undefined,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
     res.status(500).json({
       status: 500,
-      error: 'Failed to create offer'
+      error: error instanceof Error ? error.message : 'Failed to create offer'
     });
   }
 };
@@ -87,29 +94,40 @@ export const getOfferById = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getAllOffers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const user = req.user!;
+    let query = {};
 
-    const { offers, total } = await offerService.getAllOffers(
+    // Filter based on user role
+    if (user.roles.includes(UserRole.EMPLOYER)) {
+      query = { employerId: user.id };
+    } else if (user.roles.includes(UserRole.PROFESSIONAL)) {
+      // Find talent by userId
+      const talent = await Talent.findOne({ userId: user.id });
+      if (talent) {
+        query = { talentId: talent._id };
+      }
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+    const offers = await offerService.getAllOffers(
       Number(page),
       Number(limit)
     );
 
     res.status(200).json({
       status: 200,
-      data: {
-        offers,
-        pagination: {
-          currentPage: Number(page),
-          totalPages: Math.ceil(total / Number(limit)),
-          totalItems: total
-        }
-      }
+      data: offers
     });
   } catch (error) {
-    logger.error('Error in getAllOffers controller:', error);
+    console.error('Detailed error:', error);
+    logger.error('Error in getAllOffers controller:', {
+      error: error,
+      stack: error instanceof Error ? error.stack : undefined,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
     res.status(500).json({
       status: 500,
-      error: 'Failed to retrieve offers'
+      error: error instanceof Error ? error.message : 'Failed to fetch offers'
     });
   }
 }; 
