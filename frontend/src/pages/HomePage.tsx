@@ -103,43 +103,56 @@ export function HomePage() {
           </h2>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {filteredProfessionals.map((professional) => (
-            <Card key={professional.id}>
-              <CardHeader>
-                <CardTitle>{professional.name}</CardTitle>
-                <CardDescription>{professional.expertise}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="h-32 bg-gray-100 rounded-md flex items-center justify-center">
-                    <span className="text-gray-500">Profile Photo</span>
+        {filteredProfessionals.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-xl text-gray-500">No professionals found with {selectedSkill} expertise</p>
+            <Button 
+              variant="link" 
+              onClick={() => setSelectedSkill(null)}
+              className="mt-2"
+            >
+              View all professionals
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filteredProfessionals.map((professional) => (
+              <Card key={professional.id}>
+                <CardHeader>
+                  <CardTitle>{professional.name}</CardTitle>
+                  <CardDescription>{professional.expertise}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="h-32 bg-gray-100 rounded-md flex items-center justify-center">
+                      <span className="text-gray-500">Profile Photo</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Experience:</span>
+                      <span className="font-medium">{professional.experience}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {professional.skills.map((skill) => (
+                        <span 
+                          key={skill}
+                          className="bg-secondary/20 px-2 py-1 rounded-full text-xs"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Experience:</span>
-                    <span className="font-medium">{professional.experience}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {professional.skills.map((skill) => (
-                      <span 
-                        key={skill}
-                        className="bg-secondary/20 px-2 py-1 rounded-full text-xs"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <span className="text-sm font-medium">{professional.rate}</span>
-                <Link to={`/professional/${professional.id}`}>
-                  <Button variant="outline" size="sm">View Profile</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <span className="text-sm font-medium">{professional.rate}</span>
+                  <Link to={`/professional/${professional.id}`}>
+                    <Button variant="outline" size="sm">View Profile</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="bg-gray-50 py-10 rounded-lg">
